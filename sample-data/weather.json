@@ -1,0 +1,812 @@
+[
+  {
+    "date": "2024-03-01",
+    "city": "Seattle",
+    "temp_c": 12.1,
+    "humidity": 66,
+    "precip_mm": 0,
+    "wind_kph": 26.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-01",
+    "city": "Austin",
+    "temp_c": 21,
+    "humidity": 88,
+    "precip_mm": 15.9,
+    "wind_kph": 5.6,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-01",
+    "city": "Chicago",
+    "temp_c": 4.6,
+    "humidity": 60,
+    "precip_mm": 17.8,
+    "wind_kph": 10.1,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-02",
+    "city": "Seattle",
+    "temp_c": 10.6,
+    "humidity": 48,
+    "precip_mm": 0,
+    "wind_kph": 6.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-02",
+    "city": "Austin",
+    "temp_c": 20.1,
+    "humidity": 74,
+    "precip_mm": 0,
+    "wind_kph": 27.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-02",
+    "city": "Chicago",
+    "temp_c": 4.9,
+    "humidity": 61,
+    "precip_mm": 0,
+    "wind_kph": 14.3,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-03",
+    "city": "Seattle",
+    "temp_c": 10.6,
+    "humidity": 94,
+    "precip_mm": 12.4,
+    "wind_kph": 8.5,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-03",
+    "city": "Austin",
+    "temp_c": 24.8,
+    "humidity": 57,
+    "precip_mm": 3.9,
+    "wind_kph": 13,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-03",
+    "city": "Chicago",
+    "temp_c": 1.6,
+    "humidity": 40,
+    "precip_mm": 0.2,
+    "wind_kph": 9.6,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-04",
+    "city": "Seattle",
+    "temp_c": 9,
+    "humidity": 91,
+    "precip_mm": 17.2,
+    "wind_kph": 26.8,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-04",
+    "city": "Austin",
+    "temp_c": 21.9,
+    "humidity": 83,
+    "precip_mm": 0,
+    "wind_kph": 3.9,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-04",
+    "city": "Chicago",
+    "temp_c": 6.8,
+    "humidity": 45,
+    "precip_mm": 15.2,
+    "wind_kph": 23.4,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-05",
+    "city": "Seattle",
+    "temp_c": 14,
+    "humidity": 67,
+    "precip_mm": 0,
+    "wind_kph": 19.9,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-05",
+    "city": "Austin",
+    "temp_c": 26.9,
+    "humidity": 85,
+    "precip_mm": 15.7,
+    "wind_kph": 5.3,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-05",
+    "city": "Chicago",
+    "temp_c": 6.4,
+    "humidity": 89,
+    "precip_mm": 5,
+    "wind_kph": 24.6,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-06",
+    "city": "Seattle",
+    "temp_c": 12.7,
+    "humidity": 60,
+    "precip_mm": 5.3,
+    "wind_kph": 26.2,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-06",
+    "city": "Austin",
+    "temp_c": 27,
+    "humidity": 73,
+    "precip_mm": 16.9,
+    "wind_kph": 9.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-06",
+    "city": "Chicago",
+    "temp_c": 2,
+    "humidity": 90,
+    "precip_mm": 0,
+    "wind_kph": 4.9,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-07",
+    "city": "Seattle",
+    "temp_c": 10.8,
+    "humidity": 75,
+    "precip_mm": 0,
+    "wind_kph": 4.6,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-07",
+    "city": "Austin",
+    "temp_c": 24.7,
+    "humidity": 62,
+    "precip_mm": 9.7,
+    "wind_kph": 8.4,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-07",
+    "city": "Chicago",
+    "temp_c": 9.7,
+    "humidity": 62,
+    "precip_mm": 11.9,
+    "wind_kph": 26,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-08",
+    "city": "Seattle",
+    "temp_c": 11.2,
+    "humidity": 81,
+    "precip_mm": 0,
+    "wind_kph": 10.2,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-08",
+    "city": "Austin",
+    "temp_c": 19.2,
+    "humidity": 70,
+    "precip_mm": 15.7,
+    "wind_kph": 27.6,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-08",
+    "city": "Chicago",
+    "temp_c": 2,
+    "humidity": 61,
+    "precip_mm": 0,
+    "wind_kph": 17.9,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-09",
+    "city": "Seattle",
+    "temp_c": 10.3,
+    "humidity": 57,
+    "precip_mm": 5.9,
+    "wind_kph": 21.9,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-09",
+    "city": "Austin",
+    "temp_c": 23,
+    "humidity": 84,
+    "precip_mm": 0,
+    "wind_kph": 17.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-09",
+    "city": "Chicago",
+    "temp_c": 3.5,
+    "humidity": 47,
+    "precip_mm": 0,
+    "wind_kph": 8.1,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-10",
+    "city": "Seattle",
+    "temp_c": 12.5,
+    "humidity": 62,
+    "precip_mm": 12.4,
+    "wind_kph": 25.4,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-10",
+    "city": "Austin",
+    "temp_c": 18.5,
+    "humidity": 47,
+    "precip_mm": 11.7,
+    "wind_kph": 8.5,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-10",
+    "city": "Chicago",
+    "temp_c": 2.8,
+    "humidity": 49,
+    "precip_mm": 0,
+    "wind_kph": 13,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-11",
+    "city": "Seattle",
+    "temp_c": 8.6,
+    "humidity": 88,
+    "precip_mm": 10.8,
+    "wind_kph": 14.8,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-11",
+    "city": "Austin",
+    "temp_c": 22.2,
+    "humidity": 51,
+    "precip_mm": 0,
+    "wind_kph": 26.6,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-11",
+    "city": "Chicago",
+    "temp_c": 4.6,
+    "humidity": 74,
+    "precip_mm": 15.2,
+    "wind_kph": 15.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-12",
+    "city": "Seattle",
+    "temp_c": 12.3,
+    "humidity": 92,
+    "precip_mm": 0,
+    "wind_kph": 10,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-12",
+    "city": "Austin",
+    "temp_c": 19.6,
+    "humidity": 66,
+    "precip_mm": 6.8,
+    "wind_kph": 19.8,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-12",
+    "city": "Chicago",
+    "temp_c": 4.9,
+    "humidity": 85,
+    "precip_mm": 0,
+    "wind_kph": 25.8,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-13",
+    "city": "Seattle",
+    "temp_c": 8.8,
+    "humidity": 71,
+    "precip_mm": 2.9,
+    "wind_kph": 12.2,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-13",
+    "city": "Austin",
+    "temp_c": 23.7,
+    "humidity": 87,
+    "precip_mm": 11.1,
+    "wind_kph": 15.2,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-13",
+    "city": "Chicago",
+    "temp_c": 8,
+    "humidity": 42,
+    "precip_mm": 7,
+    "wind_kph": 11.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-14",
+    "city": "Seattle",
+    "temp_c": 11.4,
+    "humidity": 88,
+    "precip_mm": 0,
+    "wind_kph": 16.1,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-14",
+    "city": "Austin",
+    "temp_c": 18.9,
+    "humidity": 67,
+    "precip_mm": 0,
+    "wind_kph": 23.3,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-14",
+    "city": "Chicago",
+    "temp_c": 7.8,
+    "humidity": 55,
+    "precip_mm": 0,
+    "wind_kph": 14.3,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-15",
+    "city": "Seattle",
+    "temp_c": 6.4,
+    "humidity": 51,
+    "precip_mm": 7.6,
+    "wind_kph": 9.8,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-15",
+    "city": "Austin",
+    "temp_c": 27.1,
+    "humidity": 41,
+    "precip_mm": 5.7,
+    "wind_kph": 7.4,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-15",
+    "city": "Chicago",
+    "temp_c": 3,
+    "humidity": 48,
+    "precip_mm": 0,
+    "wind_kph": 24,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-16",
+    "city": "Seattle",
+    "temp_c": 10.5,
+    "humidity": 48,
+    "precip_mm": 0,
+    "wind_kph": 8.4,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-16",
+    "city": "Austin",
+    "temp_c": 27.6,
+    "humidity": 85,
+    "precip_mm": 13.7,
+    "wind_kph": 8.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-16",
+    "city": "Chicago",
+    "temp_c": 7,
+    "humidity": 59,
+    "precip_mm": 12.2,
+    "wind_kph": 8.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-17",
+    "city": "Seattle",
+    "temp_c": 15.9,
+    "humidity": 60,
+    "precip_mm": 12,
+    "wind_kph": 23,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-17",
+    "city": "Austin",
+    "temp_c": 24.1,
+    "humidity": 56,
+    "precip_mm": 0,
+    "wind_kph": 22.9,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-17",
+    "city": "Chicago",
+    "temp_c": 3.1,
+    "humidity": 94,
+    "precip_mm": 10.3,
+    "wind_kph": 18.6,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-18",
+    "city": "Seattle",
+    "temp_c": 14.2,
+    "humidity": 57,
+    "precip_mm": 12.4,
+    "wind_kph": 15.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-18",
+    "city": "Austin",
+    "temp_c": 23.1,
+    "humidity": 54,
+    "precip_mm": 5.6,
+    "wind_kph": 5.5,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-18",
+    "city": "Chicago",
+    "temp_c": 4,
+    "humidity": 75,
+    "precip_mm": 17.5,
+    "wind_kph": 9.3,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-19",
+    "city": "Seattle",
+    "temp_c": 11.5,
+    "humidity": 81,
+    "precip_mm": 0,
+    "wind_kph": 14.1,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-19",
+    "city": "Austin",
+    "temp_c": 24.6,
+    "humidity": 40,
+    "precip_mm": 0,
+    "wind_kph": 6.3,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-19",
+    "city": "Chicago",
+    "temp_c": 3.4,
+    "humidity": 49,
+    "precip_mm": 3.9,
+    "wind_kph": 19.2,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-20",
+    "city": "Seattle",
+    "temp_c": 9.8,
+    "humidity": 62,
+    "precip_mm": 0,
+    "wind_kph": 25.9,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-20",
+    "city": "Austin",
+    "temp_c": 26,
+    "humidity": 82,
+    "precip_mm": 0,
+    "wind_kph": 17.3,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-20",
+    "city": "Chicago",
+    "temp_c": 6.6,
+    "humidity": 79,
+    "precip_mm": 4.2,
+    "wind_kph": 26.3,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-21",
+    "city": "Seattle",
+    "temp_c": 14,
+    "humidity": 57,
+    "precip_mm": 0,
+    "wind_kph": 18.1,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-21",
+    "city": "Austin",
+    "temp_c": 18.6,
+    "humidity": 67,
+    "precip_mm": 8.9,
+    "wind_kph": 27.8,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-21",
+    "city": "Chicago",
+    "temp_c": 3.7,
+    "humidity": 83,
+    "precip_mm": 8.7,
+    "wind_kph": 7.9,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-22",
+    "city": "Seattle",
+    "temp_c": 13.9,
+    "humidity": 86,
+    "precip_mm": 11.9,
+    "wind_kph": 6.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-22",
+    "city": "Austin",
+    "temp_c": 24.8,
+    "humidity": 92,
+    "precip_mm": 0,
+    "wind_kph": 7.3,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-22",
+    "city": "Chicago",
+    "temp_c": 1.1,
+    "humidity": 68,
+    "precip_mm": 6.8,
+    "wind_kph": 5,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-23",
+    "city": "Seattle",
+    "temp_c": 14.2,
+    "humidity": 56,
+    "precip_mm": 11.5,
+    "wind_kph": 7.4,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-23",
+    "city": "Austin",
+    "temp_c": 19.1,
+    "humidity": 73,
+    "precip_mm": 4.9,
+    "wind_kph": 5,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-23",
+    "city": "Chicago",
+    "temp_c": 9.8,
+    "humidity": 45,
+    "precip_mm": 0,
+    "wind_kph": 10.2,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-24",
+    "city": "Seattle",
+    "temp_c": 10.2,
+    "humidity": 45,
+    "precip_mm": 0,
+    "wind_kph": 17.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-24",
+    "city": "Austin",
+    "temp_c": 27,
+    "humidity": 60,
+    "precip_mm": 8.9,
+    "wind_kph": 27.2,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-24",
+    "city": "Chicago",
+    "temp_c": 5.4,
+    "humidity": 80,
+    "precip_mm": 0,
+    "wind_kph": 27.6,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-25",
+    "city": "Seattle",
+    "temp_c": 9,
+    "humidity": 60,
+    "precip_mm": 0,
+    "wind_kph": 22.1,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-25",
+    "city": "Austin",
+    "temp_c": 26,
+    "humidity": 74,
+    "precip_mm": 0,
+    "wind_kph": 19,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-25",
+    "city": "Chicago",
+    "temp_c": 3.3,
+    "humidity": 48,
+    "precip_mm": 7.3,
+    "wind_kph": 19.9,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-26",
+    "city": "Seattle",
+    "temp_c": 11.2,
+    "humidity": 42,
+    "precip_mm": 0,
+    "wind_kph": 6.3,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-26",
+    "city": "Austin",
+    "temp_c": 26.9,
+    "humidity": 93,
+    "precip_mm": 2.7,
+    "wind_kph": 15.6,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-26",
+    "city": "Chicago",
+    "temp_c": 2.8,
+    "humidity": 56,
+    "precip_mm": 15.8,
+    "wind_kph": 19.1,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-27",
+    "city": "Seattle",
+    "temp_c": 12.2,
+    "humidity": 66,
+    "precip_mm": 0,
+    "wind_kph": 10.9,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-27",
+    "city": "Austin",
+    "temp_c": 25.4,
+    "humidity": 84,
+    "precip_mm": 0,
+    "wind_kph": 3.5,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-27",
+    "city": "Chicago",
+    "temp_c": 1.9,
+    "humidity": 54,
+    "precip_mm": 3.4,
+    "wind_kph": 3.7,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-28",
+    "city": "Seattle",
+    "temp_c": 9.7,
+    "humidity": 60,
+    "precip_mm": 10.3,
+    "wind_kph": 3,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-28",
+    "city": "Austin",
+    "temp_c": 23.4,
+    "humidity": 75,
+    "precip_mm": 0,
+    "wind_kph": 9.3,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-28",
+    "city": "Chicago",
+    "temp_c": 10.1,
+    "humidity": 49,
+    "precip_mm": 10.8,
+    "wind_kph": 5.9,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-29",
+    "city": "Seattle",
+    "temp_c": 10.1,
+    "humidity": 58,
+    "precip_mm": 0.4,
+    "wind_kph": 7,
+    "condition": "Cloudy"
+  },
+  {
+    "date": "2024-03-29",
+    "city": "Austin",
+    "temp_c": 18.3,
+    "humidity": 61,
+    "precip_mm": 0,
+    "wind_kph": 8.3,
+    "condition": "Sunny"
+  },
+  {
+    "date": "2024-03-29",
+    "city": "Chicago",
+    "temp_c": 10.8,
+    "humidity": 94,
+    "precip_mm": 17.1,
+    "wind_kph": 5.3,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-30",
+    "city": "Seattle",
+    "temp_c": 7.3,
+    "humidity": 80,
+    "precip_mm": 4.2,
+    "wind_kph": 21.3,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-30",
+    "city": "Austin",
+    "temp_c": 28,
+    "humidity": 60,
+    "precip_mm": 10.4,
+    "wind_kph": 5.5,
+    "condition": "Rain"
+  },
+  {
+    "date": "2024-03-30",
+    "city": "Chicago",
+    "temp_c": 1.6,
+    "humidity": 77,
+    "precip_mm": 0,
+    "wind_kph": 13.5,
+    "condition": "Sunny"
+  }
+]

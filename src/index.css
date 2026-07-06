@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+/*
+ * Palette — from the validated, colorblind-safe dataviz reference palette.
+ * App chrome lives in CSS custom properties so light/dark follow the system.
+ * Chart series colors are picked in JS (see src/lib/palette.ts) because
+ * Recharts renders SVG attributes that do not resolve CSS var() reliably.
+ */
+:root {
+  color-scheme: light dark;
+
+  --page: #f3f3f0;
+  --surface-1: #fcfcfb;
+  --surface-2: #ffffff;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --accent: #2a78d6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0d0d0c;
+    --surface-1: #1a1a19;
+    --surface-2: #232321;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --accent: #3987e5;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

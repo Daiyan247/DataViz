@@ -1,0 +1,962 @@
+[
+  {
+    "month": "2024-01",
+    "region": "West",
+    "category": "Laptops",
+    "product": "UltraBook 14",
+    "units": 45,
+    "unit_price": 1200,
+    "discount": 0.19,
+    "revenue": 43740
+  },
+  {
+    "month": "2024-01",
+    "region": "West",
+    "category": "Monitors",
+    "product": "Curve 34",
+    "units": 28,
+    "unit_price": 720,
+    "discount": 0.16,
+    "revenue": 16934.4
+  },
+  {
+    "month": "2024-01",
+    "region": "West",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 44,
+    "unit_price": 599,
+    "discount": 0.02,
+    "revenue": 25828.88
+  },
+  {
+    "month": "2024-01",
+    "region": "West",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 19,
+    "unit_price": 45,
+    "discount": 0.01,
+    "revenue": 846.45
+  },
+  {
+    "month": "2024-01",
+    "region": "East",
+    "category": "Laptops",
+    "product": "ProBook 16",
+    "units": 13,
+    "unit_price": 1800,
+    "discount": 0.19,
+    "revenue": 18954
+  },
+  {
+    "month": "2024-01",
+    "region": "East",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 15,
+    "unit_price": 480,
+    "discount": 0.06,
+    "revenue": 6768
+  },
+  {
+    "month": "2024-01",
+    "region": "East",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 17,
+    "unit_price": 899,
+    "discount": 0.05,
+    "revenue": 14518.85
+  },
+  {
+    "month": "2024-01",
+    "region": "East",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 44,
+    "unit_price": 45,
+    "discount": 0.03,
+    "revenue": 1920.6
+  },
+  {
+    "month": "2024-01",
+    "region": "North",
+    "category": "Laptops",
+    "product": "AirLite",
+    "units": 50,
+    "unit_price": 950,
+    "discount": 0.19,
+    "revenue": 38475
+  },
+  {
+    "month": "2024-01",
+    "region": "North",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 28,
+    "unit_price": 480,
+    "discount": 0.19,
+    "revenue": 10886.4
+  },
+  {
+    "month": "2024-01",
+    "region": "North",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 22,
+    "unit_price": 899,
+    "discount": 0.14,
+    "revenue": 17009.08
+  },
+  {
+    "month": "2024-01",
+    "region": "North",
+    "category": "Accessories",
+    "product": "DockHub",
+    "units": 44,
+    "unit_price": 180,
+    "discount": 0.05,
+    "revenue": 7524
+  },
+  {
+    "month": "2024-01",
+    "region": "South",
+    "category": "Laptops",
+    "product": "ProBook 16",
+    "units": 11,
+    "unit_price": 1800,
+    "discount": 0.08,
+    "revenue": 18216
+  },
+  {
+    "month": "2024-01",
+    "region": "South",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 25,
+    "unit_price": 480,
+    "discount": 0.04,
+    "revenue": 11520
+  },
+  {
+    "month": "2024-01",
+    "region": "South",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 38,
+    "unit_price": 899,
+    "discount": 0.12,
+    "revenue": 30062.56
+  },
+  {
+    "month": "2024-01",
+    "region": "South",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 19,
+    "unit_price": 45,
+    "discount": 0.14,
+    "revenue": 735.3
+  },
+  {
+    "month": "2024-02",
+    "region": "West",
+    "category": "Laptops",
+    "product": "AirLite",
+    "units": 26,
+    "unit_price": 950,
+    "discount": 0.07,
+    "revenue": 22971
+  },
+  {
+    "month": "2024-02",
+    "region": "West",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 12,
+    "unit_price": 480,
+    "discount": 0.14,
+    "revenue": 4953.6
+  },
+  {
+    "month": "2024-02",
+    "region": "West",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 10,
+    "unit_price": 599,
+    "discount": 0.1,
+    "revenue": 5391
+  },
+  {
+    "month": "2024-02",
+    "region": "West",
+    "category": "Accessories",
+    "product": "DockHub",
+    "units": 27,
+    "unit_price": 180,
+    "discount": 0.07,
+    "revenue": 4519.8
+  },
+  {
+    "month": "2024-02",
+    "region": "East",
+    "category": "Laptops",
+    "product": "UltraBook 14",
+    "units": 28,
+    "unit_price": 1200,
+    "discount": 0.04,
+    "revenue": 32256
+  },
+  {
+    "month": "2024-02",
+    "region": "East",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 62,
+    "unit_price": 480,
+    "discount": 0.08,
+    "revenue": 27379.2
+  },
+  {
+    "month": "2024-02",
+    "region": "East",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 8,
+    "unit_price": 599,
+    "discount": 0.03,
+    "revenue": 4648.24
+  },
+  {
+    "month": "2024-02",
+    "region": "East",
+    "category": "Accessories",
+    "product": "MechKeys",
+    "units": 10,
+    "unit_price": 110,
+    "discount": 0.18,
+    "revenue": 902
+  },
+  {
+    "month": "2024-02",
+    "region": "North",
+    "category": "Laptops",
+    "product": "AirLite",
+    "units": 48,
+    "unit_price": 950,
+    "discount": 0.2,
+    "revenue": 36480
+  },
+  {
+    "month": "2024-02",
+    "region": "North",
+    "category": "Monitors",
+    "product": "Curve 34",
+    "units": 37,
+    "unit_price": 720,
+    "discount": 0.11,
+    "revenue": 23709.6
+  },
+  {
+    "month": "2024-02",
+    "region": "North",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 64,
+    "unit_price": 899,
+    "discount": 0.06,
+    "revenue": 54083.84
+  },
+  {
+    "month": "2024-02",
+    "region": "North",
+    "category": "Accessories",
+    "product": "DockHub",
+    "units": 14,
+    "unit_price": 180,
+    "discount": 0.07,
+    "revenue": 2343.6
+  },
+  {
+    "month": "2024-02",
+    "region": "South",
+    "category": "Laptops",
+    "product": "UltraBook 14",
+    "units": 35,
+    "unit_price": 1200,
+    "discount": 0.05,
+    "revenue": 39900
+  },
+  {
+    "month": "2024-02",
+    "region": "South",
+    "category": "Monitors",
+    "product": "Vision 27",
+    "units": 38,
+    "unit_price": 320,
+    "discount": 0.14,
+    "revenue": 10457.6
+  },
+  {
+    "month": "2024-02",
+    "region": "South",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 29,
+    "unit_price": 599,
+    "discount": 0.11,
+    "revenue": 15460.19
+  },
+  {
+    "month": "2024-02",
+    "region": "South",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 45,
+    "unit_price": 45,
+    "discount": 0.14,
+    "revenue": 1741.5
+  },
+  {
+    "month": "2024-03",
+    "region": "West",
+    "category": "Laptops",
+    "product": "AirLite",
+    "units": 50,
+    "unit_price": 950,
+    "discount": 0.05,
+    "revenue": 45125
+  },
+  {
+    "month": "2024-03",
+    "region": "West",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 52,
+    "unit_price": 480,
+    "discount": 0.02,
+    "revenue": 24460.8
+  },
+  {
+    "month": "2024-03",
+    "region": "West",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 64,
+    "unit_price": 599,
+    "discount": 0.06,
+    "revenue": 36035.84
+  },
+  {
+    "month": "2024-03",
+    "region": "West",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 5,
+    "unit_price": 45,
+    "discount": 0.18,
+    "revenue": 184.5
+  },
+  {
+    "month": "2024-03",
+    "region": "East",
+    "category": "Laptops",
+    "product": "ProBook 16",
+    "units": 20,
+    "unit_price": 1800,
+    "discount": 0.03,
+    "revenue": 34920
+  },
+  {
+    "month": "2024-03",
+    "region": "East",
+    "category": "Monitors",
+    "product": "Curve 34",
+    "units": 37,
+    "unit_price": 720,
+    "discount": 0.09,
+    "revenue": 24242.4
+  },
+  {
+    "month": "2024-03",
+    "region": "East",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 12,
+    "unit_price": 599,
+    "discount": 0.06,
+    "revenue": 6756.72
+  },
+  {
+    "month": "2024-03",
+    "region": "East",
+    "category": "Accessories",
+    "product": "MechKeys",
+    "units": 23,
+    "unit_price": 110,
+    "discount": 0,
+    "revenue": 2530
+  },
+  {
+    "month": "2024-03",
+    "region": "North",
+    "category": "Laptops",
+    "product": "AirLite",
+    "units": 17,
+    "unit_price": 950,
+    "discount": 0.16,
+    "revenue": 13566
+  },
+  {
+    "month": "2024-03",
+    "region": "North",
+    "category": "Monitors",
+    "product": "Vision 27",
+    "units": 48,
+    "unit_price": 320,
+    "discount": 0.09,
+    "revenue": 13977.6
+  },
+  {
+    "month": "2024-03",
+    "region": "North",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 39,
+    "unit_price": 599,
+    "discount": 0.03,
+    "revenue": 22660.17
+  },
+  {
+    "month": "2024-03",
+    "region": "North",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 57,
+    "unit_price": 45,
+    "discount": 0.02,
+    "revenue": 2513.7
+  },
+  {
+    "month": "2024-03",
+    "region": "South",
+    "category": "Laptops",
+    "product": "ProBook 16",
+    "units": 46,
+    "unit_price": 1800,
+    "discount": 0.1,
+    "revenue": 74520
+  },
+  {
+    "month": "2024-03",
+    "region": "South",
+    "category": "Monitors",
+    "product": "Curve 34",
+    "units": 17,
+    "unit_price": 720,
+    "discount": 0.11,
+    "revenue": 10893.6
+  },
+  {
+    "month": "2024-03",
+    "region": "South",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 47,
+    "unit_price": 899,
+    "discount": 0.02,
+    "revenue": 41407.94
+  },
+  {
+    "month": "2024-03",
+    "region": "South",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 38,
+    "unit_price": 45,
+    "discount": 0.02,
+    "revenue": 1675.8
+  },
+  {
+    "month": "2024-04",
+    "region": "West",
+    "category": "Laptops",
+    "product": "AirLite",
+    "units": 42,
+    "unit_price": 950,
+    "discount": 0.12,
+    "revenue": 35112
+  },
+  {
+    "month": "2024-04",
+    "region": "West",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 18,
+    "unit_price": 480,
+    "discount": 0.02,
+    "revenue": 8467.2
+  },
+  {
+    "month": "2024-04",
+    "region": "West",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 29,
+    "unit_price": 899,
+    "discount": 0.07,
+    "revenue": 24246.03
+  },
+  {
+    "month": "2024-04",
+    "region": "West",
+    "category": "Accessories",
+    "product": "MechKeys",
+    "units": 24,
+    "unit_price": 110,
+    "discount": 0.18,
+    "revenue": 2164.8
+  },
+  {
+    "month": "2024-04",
+    "region": "East",
+    "category": "Laptops",
+    "product": "ProBook 16",
+    "units": 53,
+    "unit_price": 1800,
+    "discount": 0.17,
+    "revenue": 79182
+  },
+  {
+    "month": "2024-04",
+    "region": "East",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 47,
+    "unit_price": 480,
+    "discount": 0.06,
+    "revenue": 21206.4
+  },
+  {
+    "month": "2024-04",
+    "region": "East",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 40,
+    "unit_price": 899,
+    "discount": 0.15,
+    "revenue": 30566
+  },
+  {
+    "month": "2024-04",
+    "region": "East",
+    "category": "Accessories",
+    "product": "DockHub",
+    "units": 57,
+    "unit_price": 180,
+    "discount": 0.04,
+    "revenue": 9849.6
+  },
+  {
+    "month": "2024-04",
+    "region": "North",
+    "category": "Laptops",
+    "product": "AirLite",
+    "units": 34,
+    "unit_price": 950,
+    "discount": 0.11,
+    "revenue": 28747
+  },
+  {
+    "month": "2024-04",
+    "region": "North",
+    "category": "Monitors",
+    "product": "Curve 34",
+    "units": 60,
+    "unit_price": 720,
+    "discount": 0.06,
+    "revenue": 40608
+  },
+  {
+    "month": "2024-04",
+    "region": "North",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 62,
+    "unit_price": 899,
+    "discount": 0.18,
+    "revenue": 45705.16
+  },
+  {
+    "month": "2024-04",
+    "region": "North",
+    "category": "Accessories",
+    "product": "MechKeys",
+    "units": 27,
+    "unit_price": 110,
+    "discount": 0.01,
+    "revenue": 2940.3
+  },
+  {
+    "month": "2024-04",
+    "region": "South",
+    "category": "Laptops",
+    "product": "ProBook 16",
+    "units": 56,
+    "unit_price": 1800,
+    "discount": 0.18,
+    "revenue": 82656
+  },
+  {
+    "month": "2024-04",
+    "region": "South",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 62,
+    "unit_price": 480,
+    "discount": 0.12,
+    "revenue": 26188.8
+  },
+  {
+    "month": "2024-04",
+    "region": "South",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 35,
+    "unit_price": 899,
+    "discount": 0.01,
+    "revenue": 31150.35
+  },
+  {
+    "month": "2024-04",
+    "region": "South",
+    "category": "Accessories",
+    "product": "DockHub",
+    "units": 47,
+    "unit_price": 180,
+    "discount": 0.03,
+    "revenue": 8206.2
+  },
+  {
+    "month": "2024-05",
+    "region": "West",
+    "category": "Laptops",
+    "product": "UltraBook 14",
+    "units": 24,
+    "unit_price": 1200,
+    "discount": 0.12,
+    "revenue": 25344
+  },
+  {
+    "month": "2024-05",
+    "region": "West",
+    "category": "Monitors",
+    "product": "Vision 27",
+    "units": 56,
+    "unit_price": 320,
+    "discount": 0.19,
+    "revenue": 14515.2
+  },
+  {
+    "month": "2024-05",
+    "region": "West",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 17,
+    "unit_price": 599,
+    "discount": 0.19,
+    "revenue": 8248.23
+  },
+  {
+    "month": "2024-05",
+    "region": "West",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 21,
+    "unit_price": 45,
+    "discount": 0.03,
+    "revenue": 916.65
+  },
+  {
+    "month": "2024-05",
+    "region": "East",
+    "category": "Laptops",
+    "product": "UltraBook 14",
+    "units": 32,
+    "unit_price": 1200,
+    "discount": 0.2,
+    "revenue": 30720
+  },
+  {
+    "month": "2024-05",
+    "region": "East",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 10,
+    "unit_price": 480,
+    "discount": 0.11,
+    "revenue": 4272
+  },
+  {
+    "month": "2024-05",
+    "region": "East",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 21,
+    "unit_price": 599,
+    "discount": 0.18,
+    "revenue": 10314.78
+  },
+  {
+    "month": "2024-05",
+    "region": "East",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 7,
+    "unit_price": 45,
+    "discount": 0.18,
+    "revenue": 258.3
+  },
+  {
+    "month": "2024-05",
+    "region": "North",
+    "category": "Laptops",
+    "product": "UltraBook 14",
+    "units": 43,
+    "unit_price": 1200,
+    "discount": 0.08,
+    "revenue": 47472
+  },
+  {
+    "month": "2024-05",
+    "region": "North",
+    "category": "Monitors",
+    "product": "Curve 34",
+    "units": 37,
+    "unit_price": 720,
+    "discount": 0.03,
+    "revenue": 25840.8
+  },
+  {
+    "month": "2024-05",
+    "region": "North",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 15,
+    "unit_price": 599,
+    "discount": 0.03,
+    "revenue": 8715.45
+  },
+  {
+    "month": "2024-05",
+    "region": "North",
+    "category": "Accessories",
+    "product": "DockHub",
+    "units": 36,
+    "unit_price": 180,
+    "discount": 0.08,
+    "revenue": 5961.6
+  },
+  {
+    "month": "2024-05",
+    "region": "South",
+    "category": "Laptops",
+    "product": "AirLite",
+    "units": 43,
+    "unit_price": 950,
+    "discount": 0.1,
+    "revenue": 36765
+  },
+  {
+    "month": "2024-05",
+    "region": "South",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 63,
+    "unit_price": 480,
+    "discount": 0.14,
+    "revenue": 26006.4
+  },
+  {
+    "month": "2024-05",
+    "region": "South",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 34,
+    "unit_price": 599,
+    "discount": 0.15,
+    "revenue": 17311.1
+  },
+  {
+    "month": "2024-05",
+    "region": "South",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 28,
+    "unit_price": 45,
+    "discount": 0.08,
+    "revenue": 1159.2
+  },
+  {
+    "month": "2024-06",
+    "region": "West",
+    "category": "Laptops",
+    "product": "UltraBook 14",
+    "units": 48,
+    "unit_price": 1200,
+    "discount": 0.08,
+    "revenue": 52992
+  },
+  {
+    "month": "2024-06",
+    "region": "West",
+    "category": "Monitors",
+    "product": "Vision 27",
+    "units": 34,
+    "unit_price": 320,
+    "discount": 0.18,
+    "revenue": 8921.6
+  },
+  {
+    "month": "2024-06",
+    "region": "West",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 24,
+    "unit_price": 599,
+    "discount": 0.07,
+    "revenue": 13369.68
+  },
+  {
+    "month": "2024-06",
+    "region": "West",
+    "category": "Accessories",
+    "product": "MechKeys",
+    "units": 55,
+    "unit_price": 110,
+    "discount": 0.02,
+    "revenue": 5929
+  },
+  {
+    "month": "2024-06",
+    "region": "East",
+    "category": "Laptops",
+    "product": "ProBook 16",
+    "units": 18,
+    "unit_price": 1800,
+    "discount": 0.02,
+    "revenue": 31752
+  },
+  {
+    "month": "2024-06",
+    "region": "East",
+    "category": "Monitors",
+    "product": "Vision 32",
+    "units": 19,
+    "unit_price": 480,
+    "discount": 0.06,
+    "revenue": 8572.8
+  },
+  {
+    "month": "2024-06",
+    "region": "East",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 16,
+    "unit_price": 899,
+    "discount": 0.05,
+    "revenue": 13664.8
+  },
+  {
+    "month": "2024-06",
+    "region": "East",
+    "category": "Accessories",
+    "product": "MechKeys",
+    "units": 61,
+    "unit_price": 110,
+    "discount": 0.06,
+    "revenue": 6307.4
+  },
+  {
+    "month": "2024-06",
+    "region": "North",
+    "category": "Laptops",
+    "product": "ProBook 16",
+    "units": 55,
+    "unit_price": 1800,
+    "discount": 0.2,
+    "revenue": 79200
+  },
+  {
+    "month": "2024-06",
+    "region": "North",
+    "category": "Monitors",
+    "product": "Curve 34",
+    "units": 11,
+    "unit_price": 720,
+    "discount": 0.06,
+    "revenue": 7444.8
+  },
+  {
+    "month": "2024-06",
+    "region": "North",
+    "category": "Phones",
+    "product": "Pixelia Mini",
+    "units": 61,
+    "unit_price": 599,
+    "discount": 0.01,
+    "revenue": 36173.61
+  },
+  {
+    "month": "2024-06",
+    "region": "North",
+    "category": "Accessories",
+    "product": "DockHub",
+    "units": 25,
+    "unit_price": 180,
+    "discount": 0.03,
+    "revenue": 4365
+  },
+  {
+    "month": "2024-06",
+    "region": "South",
+    "category": "Laptops",
+    "product": "UltraBook 14",
+    "units": 55,
+    "unit_price": 1200,
+    "discount": 0,
+    "revenue": 66000
+  },
+  {
+    "month": "2024-06",
+    "region": "South",
+    "category": "Monitors",
+    "product": "Vision 27",
+    "units": 59,
+    "unit_price": 320,
+    "discount": 0.15,
+    "revenue": 16048
+  },
+  {
+    "month": "2024-06",
+    "region": "South",
+    "category": "Phones",
+    "product": "Pixelia X",
+    "units": 10,
+    "unit_price": 899,
+    "discount": 0.01,
+    "revenue": 8900.1
+  },
+  {
+    "month": "2024-06",
+    "region": "South",
+    "category": "Accessories",
+    "product": "GlideMouse",
+    "units": 17,
+    "unit_price": 45,
+    "discount": 0.02,
+    "revenue": 749.7
+  }
+]

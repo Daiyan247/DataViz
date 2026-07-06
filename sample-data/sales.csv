@@ -1,0 +1,97 @@
+month,region,category,product,units,unit_price,discount,revenue
+2024-01,West,Laptops,UltraBook 14,45,1200,0.19,43740
+2024-01,West,Monitors,Curve 34,28,720,0.16,16934.4
+2024-01,West,Phones,Pixelia Mini,44,599,0.02,25828.88
+2024-01,West,Accessories,GlideMouse,19,45,0.01,846.45
+2024-01,East,Laptops,ProBook 16,13,1800,0.19,18954
+2024-01,East,Monitors,Vision 32,15,480,0.06,6768
+2024-01,East,Phones,Pixelia X,17,899,0.05,14518.85
+2024-01,East,Accessories,GlideMouse,44,45,0.03,1920.6
+2024-01,North,Laptops,AirLite,50,950,0.19,38475
+2024-01,North,Monitors,Vision 32,28,480,0.19,10886.4
+2024-01,North,Phones,Pixelia X,22,899,0.14,17009.08
+2024-01,North,Accessories,DockHub,44,180,0.05,7524
+2024-01,South,Laptops,ProBook 16,11,1800,0.08,18216
+2024-01,South,Monitors,Vision 32,25,480,0.04,11520
+2024-01,South,Phones,Pixelia X,38,899,0.12,30062.56
+2024-01,South,Accessories,GlideMouse,19,45,0.14,735.3
+2024-02,West,Laptops,AirLite,26,950,0.07,22971
+2024-02,West,Monitors,Vision 32,12,480,0.14,4953.6
+2024-02,West,Phones,Pixelia Mini,10,599,0.1,5391
+2024-02,West,Accessories,DockHub,27,180,0.07,4519.8
+2024-02,East,Laptops,UltraBook 14,28,1200,0.04,32256
+2024-02,East,Monitors,Vision 32,62,480,0.08,27379.2
+2024-02,East,Phones,Pixelia Mini,8,599,0.03,4648.24
+2024-02,East,Accessories,MechKeys,10,110,0.18,902
+2024-02,North,Laptops,AirLite,48,950,0.2,36480
+2024-02,North,Monitors,Curve 34,37,720,0.11,23709.6
+2024-02,North,Phones,Pixelia X,64,899,0.06,54083.84
+2024-02,North,Accessories,DockHub,14,180,0.07,2343.6
+2024-02,South,Laptops,UltraBook 14,35,1200,0.05,39900
+2024-02,South,Monitors,Vision 27,38,320,0.14,10457.6
+2024-02,South,Phones,Pixelia Mini,29,599,0.11,15460.19
+2024-02,South,Accessories,GlideMouse,45,45,0.14,1741.5
+2024-03,West,Laptops,AirLite,50,950,0.05,45125
+2024-03,West,Monitors,Vision 32,52,480,0.02,24460.8
+2024-03,West,Phones,Pixelia Mini,64,599,0.06,36035.84
+2024-03,West,Accessories,GlideMouse,5,45,0.18,184.5
+2024-03,East,Laptops,ProBook 16,20,1800,0.03,34920
+2024-03,East,Monitors,Curve 34,37,720,0.09,24242.4
+2024-03,East,Phones,Pixelia Mini,12,599,0.06,6756.72
+2024-03,East,Accessories,MechKeys,23,110,0,2530
+2024-03,North,Laptops,AirLite,17,950,0.16,13566
+2024-03,North,Monitors,Vision 27,48,320,0.09,13977.6
+2024-03,North,Phones,Pixelia Mini,39,599,0.03,22660.17
+2024-03,North,Accessories,GlideMouse,57,45,0.02,2513.7
+2024-03,South,Laptops,ProBook 16,46,1800,0.1,74520
+2024-03,South,Monitors,Curve 34,17,720,0.11,10893.6
+2024-03,South,Phones,Pixelia X,47,899,0.02,41407.94
+2024-03,South,Accessories,GlideMouse,38,45,0.02,1675.8
+2024-04,West,Laptops,AirLite,42,950,0.12,35112
+2024-04,West,Monitors,Vision 32,18,480,0.02,8467.2
+2024-04,West,Phones,Pixelia X,29,899,0.07,24246.03
+2024-04,West,Accessories,MechKeys,24,110,0.18,2164.8
+2024-04,East,Laptops,ProBook 16,53,1800,0.17,79182
+2024-04,East,Monitors,Vision 32,47,480,0.06,21206.4
+2024-04,East,Phones,Pixelia X,40,899,0.15,30566
+2024-04,East,Accessories,DockHub,57,180,0.04,9849.6
+2024-04,North,Laptops,AirLite,34,950,0.11,28747
+2024-04,North,Monitors,Curve 34,60,720,0.06,40608
+2024-04,North,Phones,Pixelia X,62,899,0.18,45705.16
+2024-04,North,Accessories,MechKeys,27,110,0.01,2940.3
+2024-04,South,Laptops,ProBook 16,56,1800,0.18,82656
+2024-04,South,Monitors,Vision 32,62,480,0.12,26188.8
+2024-04,South,Phones,Pixelia X,35,899,0.01,31150.35
+2024-04,South,Accessories,DockHub,47,180,0.03,8206.2
+2024-05,West,Laptops,UltraBook 14,24,1200,0.12,25344
+2024-05,West,Monitors,Vision 27,56,320,0.19,14515.2
+2024-05,West,Phones,Pixelia Mini,17,599,0.19,8248.23
+2024-05,West,Accessories,GlideMouse,21,45,0.03,916.65
+2024-05,East,Laptops,UltraBook 14,32,1200,0.2,30720
+2024-05,East,Monitors,Vision 32,10,480,0.11,4272
+2024-05,East,Phones,Pixelia Mini,21,599,0.18,10314.78
+2024-05,East,Accessories,GlideMouse,7,45,0.18,258.3
+2024-05,North,Laptops,UltraBook 14,43,1200,0.08,47472
+2024-05,North,Monitors,Curve 34,37,720,0.03,25840.8
+2024-05,North,Phones,Pixelia Mini,15,599,0.03,8715.45
+2024-05,North,Accessories,DockHub,36,180,0.08,5961.6
+2024-05,South,Laptops,AirLite,43,950,0.1,36765
+2024-05,South,Monitors,Vision 32,63,480,0.14,26006.4
+2024-05,South,Phones,Pixelia Mini,34,599,0.15,17311.1
+2024-05,South,Accessories,GlideMouse,28,45,0.08,1159.2
+2024-06,West,Laptops,UltraBook 14,48,1200,0.08,52992
+2024-06,West,Monitors,Vision 27,34,320,0.18,8921.6
+2024-06,West,Phones,Pixelia Mini,24,599,0.07,13369.68
+2024-06,West,Accessories,MechKeys,55,110,0.02,5929
+2024-06,East,Laptops,ProBook 16,18,1800,0.02,31752
+2024-06,East,Monitors,Vision 32,19,480,0.06,8572.8
+2024-06,East,Phones,Pixelia X,16,899,0.05,13664.8
+2024-06,East,Accessories,MechKeys,61,110,0.06,6307.4
+2024-06,North,Laptops,ProBook 16,55,1800,0.2,79200
+2024-06,North,Monitors,Curve 34,11,720,0.06,7444.8
+2024-06,North,Phones,Pixelia Mini,61,599,0.01,36173.61
+2024-06,North,Accessories,DockHub,25,180,0.03,4365
+2024-06,South,Laptops,UltraBook 14,55,1200,0,66000
+2024-06,South,Monitors,Vision 27,59,320,0.15,16048
+2024-06,South,Phones,Pixelia X,10,899,0.01,8900.1
+2024-06,South,Accessories,GlideMouse,17,45,0.02,749.7
