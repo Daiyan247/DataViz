@@ -21,7 +21,7 @@ export function WarningPopup({ warnings, recommendation, onSwitch, onMinimize }:
   const hasContent = warnings.length > 0 || Boolean(recommendation)
   if (!hasContent) return null
 
-  const actionStyle = { borderColor: 'var(--accent)', color: 'var(--accent)' }
+  const actionStyle = { borderColor: 'var(--primary)', color: 'var(--primary)' }
 
   return (
     <div

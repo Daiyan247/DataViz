@@ -34,7 +34,7 @@ export function FileDrop({ onLoad }: FileDropProps) {
       onClick={() => inputRef.current?.click()}
       className="flex h-full min-h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 text-center transition-colors"
       style={{
-        borderColor: hover ? 'var(--accent)' : 'var(--border)',
+        borderColor: hover ? 'var(--primary)' : 'var(--border)',
         background: hover ? 'var(--surface-2)' : 'transparent',
       }}
     >

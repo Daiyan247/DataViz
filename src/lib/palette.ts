@@ -38,20 +38,23 @@ export interface Chrome {
   label: string
 }
 
+// Kept in step BY HAND with shadcn's tokens in src/index.css — Vega paints SVG
+// attributes, which don't resolve var(). These are the neutral scale's oklch values
+// converted to hex, so a plot sits on its Card without a visible seam.
 export const CHROME_LIGHT: Chrome = {
-  surface: '#fcfcfb',
-  grid: '#e1e0d9',
-  axis: '#c3c2b7',
-  tick: '#52514e',
-  label: '#0b0b0b',
+  surface: '#ffffff', // --card        oklch(1 0 0)
+  grid: '#e5e5e5', // --border      oklch(0.922 0 0)
+  axis: '#d4d4d4', // --axis        oklch(0.87 0 0)
+  tick: '#737373', // --muted-fg    oklch(0.556 0 0)
+  label: '#0a0a0a', // --foreground  oklch(0.145 0 0)
 }
 
 export const CHROME_DARK: Chrome = {
-  surface: '#1a1a19',
-  grid: '#2c2c2a',
-  axis: '#383835',
-  tick: '#c3c2b7',
-  label: '#ffffff',
+  surface: '#262626', // --card        oklch(0.205 0 0)
+  grid: '#3d3d3d', // --border      white 12%
+  axis: '#4d4d4d', // --axis        white 22%
+  tick: '#a1a1a1', // --muted-fg    oklch(0.708 0 0)
+  label: '#fafafa', // --foreground  oklch(0.985 0 0)
 }
 
 /** Series hue for slot `i`, in fixed order, clamped to the ramp length. */

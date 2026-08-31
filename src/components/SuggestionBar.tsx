@@ -71,8 +71,8 @@ export function SuggestionBar({ suggestions, onSelect, activeKind, readyKinds, l
               ready ? ' transition-opacity hover:opacity-70' : ' cursor-not-allowed'
             }${anim}`}
             style={{
-              borderColor: active || st === 'loading' ? 'var(--accent)' : 'var(--border)',
-              background: active ? 'var(--accent)' : 'var(--surface-2)',
+              borderColor: active || st === 'loading' ? 'var(--primary)' : 'var(--border)',
+              background: active ? 'var(--primary)' : 'var(--surface-2)',
               color: active ? '#fff' : 'var(--text-primary)',
               fontWeight: active ? 600 : 400,
             }}

@@ -739,8 +739,8 @@ function MapPanel({
         className="flex h-8 w-8 items-center justify-center rounded-full border text-sm shadow-lg transition-opacity hover:opacity-80"
         style={{
           background: 'var(--surface-1)',
-          borderColor: zoomLocked ? 'var(--accent)' : 'var(--border)',
-          color: zoomLocked ? 'var(--accent)' : 'var(--text-secondary)',
+          borderColor: zoomLocked ? 'var(--primary)' : 'var(--border)',
+          color: zoomLocked ? 'var(--primary)' : 'var(--text-secondary)',
         }}
       >
         {zoomLocked ? '🔒' : '🔓'}
@@ -754,8 +754,8 @@ function MapPanel({
         className="flex h-8 w-8 items-center justify-center rounded-full border text-sm shadow-lg transition-opacity hover:opacity-80"
         style={{
           background: 'var(--surface-1)',
-          borderColor: tiltLocked ? 'var(--accent)' : 'var(--border)',
-          color: tiltLocked ? 'var(--accent)' : 'var(--text-secondary)',
+          borderColor: tiltLocked ? 'var(--primary)' : 'var(--border)',
+          color: tiltLocked ? 'var(--primary)' : 'var(--text-secondary)',
         }}
       >
         {tiltLocked ? '⛰️' : '⤢'}
@@ -815,7 +815,7 @@ function MapPanel({
             className="h-6 w-8 rounded-[4px] transition-transform hover:scale-110"
             style={{
               background: `linear-gradient(135deg, ${a.rampLow}, ${a.rampHigh})`,
-              outline: aestheticId === a.id ? '2px solid var(--accent)' : '1px solid rgba(128,128,128,0.3)',
+              outline: aestheticId === a.id ? '2px solid var(--primary)' : '1px solid rgba(128,128,128,0.3)',
               outlineOffset: aestheticId === a.id ? 1 : 0,
             }}
           />
@@ -862,7 +862,7 @@ function MapPanel({
           style={swatchStyle}
         />
       </div>
-      <div className="mb-3 flex items-center justify-between text-[10px]" style={{ color: 'var(--muted)' }}>
+      <div className="mb-3 flex items-center justify-between text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
         <span>Low</span>
         <div className="flex gap-1">
           <button
@@ -877,7 +877,7 @@ function MapPanel({
             type="button"
             onClick={() => onGradient({ low: styleRamp[0], high: styleRamp[1] })}
             className="rounded px-1.5 py-0.5 hover:opacity-70"
-            style={{ color: 'var(--accent)' }}
+            style={{ color: 'var(--primary)' }}
           >
             use style
           </button>
@@ -889,7 +889,7 @@ function MapPanel({
         <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
           Show value by
         </span>
-        <span className="text-[10px]" style={{ color: 'var(--muted)' }}>
+        <span className="text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
           + height (always)
         </span>
       </div>
@@ -905,8 +905,8 @@ function MapPanel({
               onClick={() => onToggleEnc(e.id)}
               className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors"
               style={{
-                background: on ? 'var(--accent)' : 'var(--surface-2)',
-                borderColor: on ? 'var(--accent)' : 'var(--border)',
+                background: on ? 'var(--primary)' : 'var(--surface-2)',
+                borderColor: on ? 'var(--primary)' : 'var(--border)',
                 color: on ? '#fff' : 'var(--text-secondary)',
               }}
             >
@@ -1065,7 +1065,7 @@ export function MapView({ data, columns, spec, request }: MapViewProps) {
       {selected && (
         <div
           className="absolute bottom-3 left-3 z-20 rounded-md border px-3 py-2 text-xs shadow"
-          style={{ background: 'var(--surface-1)', borderColor: 'var(--accent)', color: 'var(--text-primary)' }}
+          style={{ background: 'var(--surface-1)', borderColor: 'var(--primary)', color: 'var(--text-primary)' }}
         >
           <div className="font-semibold">{selected.name}</div>
           <div style={{ color: 'var(--text-secondary)' }}>

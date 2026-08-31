@@ -468,7 +468,7 @@ export default function App() {
                         onClick={analyseGraph}
                         disabled={!canAnalyse || Boolean(analysingKey)}
                         className="shrink-0 rounded-full border px-3 py-0.5 text-xs font-medium transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
-                        style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}
+                        style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
                       >
                         {conclusion ? '↻ Re-analyse' : '🔍 Analyse this graph'}
                       </button>

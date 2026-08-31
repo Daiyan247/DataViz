@@ -88,7 +88,7 @@ export function ChartRequestInput({
         onClick={onSubmit}
         disabled={disabled || busy || value.trim().length === 0}
         className="flex h-9 shrink-0 items-center rounded-full px-4 text-sm font-medium text-white transition-opacity disabled:opacity-40"
-        style={{ background: 'var(--accent)' }}
+        style={{ background: 'var(--primary)' }}
       >
         {busy ? 'Charting…' : 'Chart it'}
       </button>

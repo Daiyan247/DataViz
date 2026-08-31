@@ -180,7 +180,7 @@ export function FilterPanel({ columns, rows, filters, onAdd, onRemove, onClear }
           onClick={add}
           disabled={value.trim() === ''}
           className="rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-opacity disabled:opacity-40"
-          style={{ background: 'var(--accent)' }}
+          style={{ background: 'var(--primary)' }}
         >
           Add filter
         </button>

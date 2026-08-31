@@ -84,7 +84,7 @@ function Row({
         step={step}
         value={value}
         onChange={(e) => commit(e.target.value)}
-        className="min-w-0 flex-1 accent-[var(--accent)]"
+        className="min-w-0 flex-1 accent-[var(--primary)]"
       />
       <input
         type="number"
@@ -183,7 +183,7 @@ export function AnimationLab() {
         className="relative flex items-end justify-center overflow-hidden"
         style={{ height: 90, background: 'var(--surface-2)' }}
       >
-        <div className="pb-2 text-2xl font-semibold" style={{ color: 'var(--accent)', lineHeight: 1 }}>
+        <div className="pb-2 text-2xl font-semibold" style={{ color: 'var(--primary)', lineHeight: 1 }}>
           <SpringText text={word} params={params} trigger={tick} />
         </div>
         <div className="absolute bottom-0 left-0 right-0" style={{ height: 2, background: 'var(--border)' }} />
@@ -202,7 +202,7 @@ export function AnimationLab() {
             onChange={(v) => set(s.key, v)}
           />
         ))}
-        <div className="pt-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>
+        <div className="pt-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>
           Spring easing (cubic-bezier)
         </div>
         {EASING.map((e, i) => (
@@ -225,7 +225,7 @@ export function AnimationLab() {
             type="button"
             onClick={save}
             className="rounded-full px-3 py-0.5 text-xs font-medium text-white transition-opacity hover:opacity-80"
-            style={{ background: 'var(--accent)' }}
+            style={{ background: 'var(--primary)' }}
           >
             {saved ? 'Saved ✓' : 'Save'}
           </button>
@@ -233,7 +233,7 @@ export function AnimationLab() {
             type="button"
             onClick={copy}
             className="rounded-full border px-3 py-0.5 text-xs font-medium transition-opacity hover:opacity-70"
-            style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}
+            style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
           >
             {copied ? 'Copied ✓' : 'Copy'}
           </button>
