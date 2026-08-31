@@ -3,6 +3,15 @@ dist
 dist-ssr
 *.local
 coverage
+
+# Python bytecode from the FastAPI backend
+__pycache__/
+*.py[cod]
+
+# Secrets — never commit real keys. Keep .env.example as the template.
+.env
+.env.*
+!.env.example
 .DS_Store
 *.log
 .vscode/*

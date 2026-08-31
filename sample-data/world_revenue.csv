@@ -1,0 +1,25 @@
+country,region,revenue,units,customers
+United States,Americas,438200,4520,1820
+Canada,Americas,128400,1340,540
+Mexico,Americas,74300,980,410
+Brazil,Americas,96500,1120,470
+Argentina,Americas,41200,560,230
+United Kingdom,Europe,187600,1980,760
+France,Europe,164900,1740,690
+Germany,Europe,201300,2110,820
+Spain,Europe,88700,1010,440
+Italy,Europe,112400,1250,520
+Netherlands,Europe,79800,860,360
+Sweden,Europe,54600,610,260
+Norway,Europe,48900,520,210
+Poland,Europe,61200,780,330
+Russia,Europe,93400,1180,500
+China,Asia,356800,4890,2010
+Japan,Asia,242100,2380,940
+South Korea,Asia,118700,1290,560
+India,Asia,203500,3620,1580
+Indonesia,Asia,67300,1140,610
+Australia,Oceania,109800,1160,470
+South Africa,Africa,52400,720,340
+Nigeria,Africa,38600,910,520
+Egypt,Africa,44100,680,360

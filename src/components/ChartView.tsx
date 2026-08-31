@@ -1,186 +1,147 @@
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Scatter,
-  ScatterChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-  ZAxis,
-} from 'recharts'
-import type { ChartDatum, ChartSpec } from '../lib/types'
-import { chrome, seriesColor } from '../lib/palette'
+import { lazy, Suspense } from 'react'
+import { VegaLite, type VisualizationSpec } from 'react-vega'
+import type { Column, Row, VizSpec } from '../lib/types'
+import { vegaConfig } from '../lib/vegaTheme'
 import { useIsDark } from './useIsDark'
 
+// three.js + the atlas geometry are heavy and only needed for maps, so load the
+// MapView lazily — it stays out of the main bundle until a map is shown.
+const MapView = lazy(() => import('./MapView').then((m) => ({ default: m.MapView })))
+
 /**
- * Presentational chart renderer. Given plot-ready data + a spec, draws the right
- * Recharts chart using the validated palette. Single-measure charts (bar/line/
- * area/scatter) use one hue and no legend; pie slices are distinct identities and
- * get a legend. All chrome (grid, axes, tooltip) is theme-aware and recessive.
+ * Presentational chart renderer built on Vega-Lite (react-vega). The VizSpec's
+ * `encoding` already carries each field's data type (quantitative/temporal/
+ * ordinal/nominal), so we just inject the filtered rows + a theme and let
+ * Vega-Lite do the aggregation, binning, and layout.
  */
 
-const compact = new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 })
-const full = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 })
-
 export interface ChartViewProps {
-  data: ChartDatum[]
-  spec: ChartSpec
+  data: Row[]
+  spec: VizSpec
+  /** Full column list — needed by the map renderer to detect geographic columns. */
+  columns?: Column[]
+  /** The natural-language request — the map reads its scope (world/continent/country) from it. */
+  request?: string
 }
 
-export function ChartView({ data, spec }: ChartViewProps) {
+/** Drop empty channels / undefined props so Vega-Lite gets a clean encoding. */
+function toVegaEncoding(encoding: VizSpec['encoding']): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [channel, def] of Object.entries(encoding)) {
+    if (!def) continue
+    const field: Record<string, unknown> = { type: def.type }
+    if (def.field) field.field = def.field
+    if (def.aggregate) field.aggregate = def.aggregate
+    if (def.bin) field.bin = true
+    out[channel] = field
+  }
+  return out
+}
+
+/**
+ * Prettify: slant a categorical X axis when it would be cramped (many categories
+ * or long labels), so ticks stay readable instead of overlapping. See
+ * `server/styling_guide.md` for the conventions. Applied at render time because
+ * it depends on the actual label count/length, not the data mapping.
+ */
+function prettifyXAxis(encoding: Record<string, unknown>, data: Row[]): void {
+  const x = encoding.x as { field?: string; type?: string; axis?: Record<string, unknown> } | undefined
+  if (!x?.field || (x.type !== 'nominal' && x.type !== 'ordinal')) return
+
+  const seen = new Set<string>()
+  let maxLen = 0
+  for (const row of data) {
+    const label = String(row[x.field] ?? '')
+    seen.add(label)
+    if (label.length > maxLen) maxLen = label.length
+  }
+  const cramped = seen.size > 6 || maxLen > 10
+  x.axis = { ...(x.axis ?? {}), labelAngle: cramped ? -40 : 0, labelLimit: 200 }
+}
+
+export function ChartView({ data, spec, columns, request }: ChartViewProps) {
   const dark = useIsDark()
-  const c = chrome(dark)
+
+  // Maps render via the dedicated three.js view (even with no rows → world base).
+  if (spec.mark === 'geoshape') {
+    const cols: Column[] = columns ?? Object.keys(data[0] ?? {}).map((name) => ({ name, type: 'string' as const }))
+    return (
+      <Suspense
+        fallback={
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            Loading map…
+          </div>
+        }
+      >
+        <MapView data={data} columns={cols} spec={spec} request={request} />
+      </Suspense>
+    )
+  }
 
   if (data.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-sm" style={{ color: c.tick }}>
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
         No data to plot for this request.
       </div>
     )
   }
 
-  const axisProps = {
-    stroke: c.axis,
-    tick: { fill: c.tick, fontSize: 12 },
-    tickLine: false,
+  const isPoint = spec.mark === 'point' || spec.mark === 'circle'
+  const isBubble = isPoint && Boolean(spec.encoding.size)
+  // Cleveland dot plot: a point mark with one categorical axis + an aggregated
+  // measure (one dot per category), as opposed to a scatter's two raw axes.
+  const xCat = Boolean(spec.encoding.x) && spec.encoding.x!.type !== 'quantitative'
+  const yCat = Boolean(spec.encoding.y) && spec.encoding.y!.type !== 'quantitative'
+  const isDot = isPoint && !isBubble && xCat !== yCat && Boolean(spec.encoding.x?.aggregate || spec.encoding.y?.aggregate)
+
+  const mark: Record<string, unknown> = { type: spec.mark, tooltip: true }
+  if (spec.mark === 'line') mark.point = true
+  if (spec.mark === 'bar' || spec.mark === 'rect') mark.cornerRadius = 2
+  // Whiskers span the full range so outliers aren't drawn as separate circles
+  // (which read like leftover scatter points). No data is hidden.
+  if (spec.mark === 'boxplot') mark.extent = 'min-max'
+  // Strip plot: every raw value as a tick, semi-transparent so overlaps read.
+  if (spec.mark === 'tick') {
+    mark.opacity = 0.6
+    mark.thickness = 2
   }
-  const tooltipStyle = {
-    background: c.surface,
-    border: `1px solid ${c.axis}`,
-    borderRadius: 8,
-    color: c.label,
-    fontSize: 12,
+  // Bubble/scatter styled like ggplot: filled, semi-transparent circles with a
+  // thin stroke so overlapping points stay legible.
+  if (isPoint) {
+    mark.filled = true
+    mark.opacity = isDot ? 1 : isBubble ? 0.6 : 0.75
+    mark.stroke = dark ? '#1a1a19' : '#fcfcfb'
+    mark.strokeWidth = 0.5
+    // Cleveland dot plot: one solid, generously sized dot per category.
+    if (isDot) mark.size = 140
   }
-  const grid = <CartesianGrid stroke={c.grid} strokeDasharray="3 3" vertical={false} />
-  const measure = seriesColor(0, dark)
 
-  switch (spec.type) {
-    case 'line':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 12, right: 24, bottom: 8, left: 8 }}>
-            {grid}
-            <XAxis dataKey="name" {...axisProps} />
-            <YAxis tickFormatter={(v) => compact.format(Number(v))} {...axisProps} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v) => full.format(Number(v))} />
-            <Line
-              type="monotone"
-              dataKey="value"
-              name={spec.y}
-              stroke={measure}
-              strokeWidth={2}
-              dot={{ r: 3, fill: measure }}
-              activeDot={{ r: 5 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      )
-
-    case 'area':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 12, right: 24, bottom: 8, left: 8 }}>
-            <defs>
-              <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={measure} stopOpacity={0.35} />
-                <stop offset="100%" stopColor={measure} stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
-            {grid}
-            <XAxis dataKey="name" {...axisProps} />
-            <YAxis tickFormatter={(v) => compact.format(Number(v))} {...axisProps} />
-            <Tooltip contentStyle={tooltipStyle} formatter={(v) => full.format(Number(v))} />
-            <Area
-              type="monotone"
-              dataKey="value"
-              name={spec.y}
-              stroke={measure}
-              strokeWidth={2}
-              fill="url(#fill)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      )
-
-    case 'pie':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Tooltip contentStyle={tooltipStyle} formatter={(v) => full.format(Number(v))} />
-            <Legend wrapperStyle={{ fontSize: 12, color: c.tick }} />
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              innerRadius="45%"
-              outerRadius="75%"
-              paddingAngle={2}
-              stroke={c.surface}
-              strokeWidth={2}
-            >
-              {data.map((d, i) => (
-                <Cell key={String(d.name)} fill={seriesColor(i, dark)} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
-      )
-
-    case 'scatter':
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 12, right: 24, bottom: 16, left: 8 }}>
-            {grid}
-            <XAxis
-              type="number"
-              dataKey="name"
-              name={spec.x}
-              {...axisProps}
-              tickFormatter={(v) => compact.format(Number(v))}
-            />
-            <YAxis
-              type="number"
-              dataKey="value"
-              name={spec.y}
-              {...axisProps}
-              tickFormatter={(v) => compact.format(Number(v))}
-            />
-            <ZAxis range={[60, 60]} />
-            <Tooltip
-              contentStyle={tooltipStyle}
-              cursor={{ stroke: c.axis }}
-              formatter={(v) => full.format(Number(v))}
-            />
-            <Scatter data={data} fill={measure} />
-          </ScatterChart>
-        </ResponsiveContainer>
-      )
-
-    default:
-      return (
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 12, right: 24, bottom: 8, left: 8 }}>
-            {grid}
-            <XAxis dataKey="name" {...axisProps} interval={0} angle={data.length > 6 ? -25 : 0} textAnchor={data.length > 6 ? 'end' : 'middle'} height={data.length > 6 ? 56 : 30} />
-            <YAxis tickFormatter={(v) => compact.format(Number(v))} {...axisProps} />
-            <Tooltip
-              contentStyle={tooltipStyle}
-              cursor={{ fill: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}
-              formatter={(v) => full.format(Number(v))}
-            />
-            <Bar dataKey="value" name={spec.y} fill={measure} radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      )
+  const encoding = toVegaEncoding(spec.encoding)
+  prettifyXAxis(encoding, data)
+  // Give bubbles a generous, readable size range (Vega's default is too small).
+  if (isBubble && encoding.size) {
+    ;(encoding.size as Record<string, unknown>).scale = { range: [40, 1200] }
   }
+
+  const vlSpec = {
+    $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+    data: { values: data },
+    mark,
+    encoding,
+    width: 'container',
+    height: 'container',
+    autosize: { type: 'fit', contains: 'padding' },
+    config: vegaConfig(dark),
+  } as unknown as VisualizationSpec
+
+  return (
+    <div className="h-full w-full">
+      <VegaLite
+        spec={vlSpec}
+        actions={false}
+        renderer="svg"
+        style={{ width: '100%', height: '100%' }}
+      />
+    </div>
+  )
 }

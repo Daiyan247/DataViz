@@ -38,20 +38,23 @@ export interface Chrome {
   label: string
 }
 
+// Kept in step BY HAND with the tokens in src/index.css (Vega renders SVG
+// attributes, which don't resolve var()). These are the same slate values the app
+// chrome uses, so a chart sits on its card without a seam.
 export const CHROME_LIGHT: Chrome = {
-  surface: '#fcfcfb',
-  grid: '#e1e0d9',
-  axis: '#c3c2b7',
-  tick: '#52514e',
-  label: '#0b0b0b',
+  surface: '#ffffff', // --card
+  grid: '#e2e8f0', // --border
+  axis: '#cbd5e1', // --axis
+  tick: '#64748b', // --muted-foreground
+  label: '#0f172a', // --foreground
 }
 
 export const CHROME_DARK: Chrome = {
-  surface: '#1a1a19',
-  grid: '#2c2c2a',
-  axis: '#383835',
-  tick: '#c3c2b7',
-  label: '#ffffff',
+  surface: '#111a2e', // --card
+  grid: '#1e293b', // --border
+  axis: '#334155', // --axis
+  tick: '#94a3b8', // --muted-foreground
+  label: '#f8fafc', // --foreground
 }
 
 /** Series hue for slot `i`, in fixed order, clamped to the ramp length. */

@@ -6,6 +6,8 @@
   "description": "Drop in a CSV or JSON file, describe a chart in plain words, filter, and visualize.",
   "scripts": {
     "dev": "vite",
+    "api": "uvicorn server.main:app --reload --port 8000",
+    "dev:all": "concurrently -n web,api -c cyan,magenta \"npm:dev\" \"npm:api\"",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -14,10 +16,21 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.7.0",
     "clsx": "^2.1.1",
+    "countries-list": "^3.4.1",
+    "d3-geo": "^3.1.1",
+    "d3-geo-projection": "^4.0.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "recharts": "^3.0.0"
+    "react-vega": "^7.6.0",
+    "three": "^0.185.1",
+    "topojson-client": "^3.1.0",
+    "us-atlas": "^3.0.1",
+    "vega": "^5.30.0",
+    "vega-lite": "^5.21.0",
+    "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -25,10 +38,14 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/d3-geo": "^3.1.0",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.185.1",
+    "@types/topojson-client": "^3.1.5",
     "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.1.0",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",

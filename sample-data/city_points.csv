@@ -1,0 +1,21 @@
+city,country,latitude,longitude,sales,visitors
+New York,United States,40.7128,-74.0060,52000,18400
+Los Angeles,United States,34.0522,-118.2437,41000,15200
+Chicago,United States,41.8781,-87.6298,33000,12100
+Toronto,Canada,43.6532,-79.3832,28000,10400
+Mexico City,Mexico,19.4326,-99.1332,24000,9800
+London,United Kingdom,51.5074,-0.1278,47000,17600
+Paris,France,48.8566,2.3522,39000,14300
+Berlin,Germany,52.5200,13.4050,31000,11500
+Madrid,Spain,40.4168,-3.7038,26000,9700
+Rome,Italy,41.9028,12.4964,23000,8600
+Moscow,Russia,55.7558,37.6173,29000,10900
+Beijing,China,39.9042,116.4074,58000,21300
+Tokyo,Japan,35.6762,139.6503,61000,22100
+Seoul,South Korea,37.5665,126.9780,34000,12800
+Mumbai,India,19.0760,72.8777,44000,19600
+Sydney,Australia,-33.8688,151.2093,27000,9900
+Sao Paulo,Brazil,-23.5505,-46.6333,32000,12400
+Cairo,Egypt,30.0444,31.2357,19000,8200
+Lagos,Nigeria,6.5244,3.3792,17000,7600
+Johannesburg,South Africa,-26.2041,28.0473,21000,8100

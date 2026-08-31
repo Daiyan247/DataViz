@@ -78,15 +78,14 @@ export function FilterPanel({ columns, rows, filters, onAdd, onRemove, onClear }
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold">Filters</h2>
+        <h2 className="dvs-label">Filters</h2>
         {filters.length > 0 && (
           <button
             type="button"
             onClick={onClear}
-            className="text-xs hover:underline"
-            style={{ color: 'var(--text-secondary)' }}
+            className="text-xs text-muted-foreground transition-colors hover:text-foreground hover:underline"
           >
-            clear all
+            Clear all
           </button>
         )}
       </div>
@@ -96,17 +95,17 @@ export function FilterPanel({ columns, rows, filters, onAdd, onRemove, onClear }
           {filters.map((f) => (
             <li
               key={f.id}
-              className="flex items-center justify-between gap-2 rounded-lg px-2 py-1 text-xs"
-              style={{ background: 'var(--surface-2)' }}
+              className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted px-2 py-1 text-xs"
             >
               <span className="truncate">
-                <span className="font-medium">{f.column}</span> {OP_LABELS[f.op]}{' '}
-                <span style={{ color: 'var(--text-secondary)' }}>{String(f.value)}</span>
+                <span className="font-medium">{f.column}</span>{' '}
+                <span className="text-muted-foreground">{OP_LABELS[f.op]}</span>{' '}
+                <span className="font-medium">{String(f.value)}</span>
               </span>
               <button
                 type="button"
                 onClick={() => onRemove(f.id)}
-                className="shrink-0 opacity-60 hover:opacity-100"
+                className="shrink-0 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
                 aria-label="remove filter"
               >
                 ✕
@@ -124,8 +123,7 @@ export function FilterPanel({ columns, rows, filters, onAdd, onRemove, onClear }
             const next = columns.find((c) => c.name === e.target.value)
             if (next) setOp(OPS_BY_TYPE[next.type][0].op)
           }}
-          className="rounded-lg border px-2 py-1 text-xs"
-          style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--text-primary)' }}
+          className="dvs-select h-8 text-xs"
         >
           {columns.map((c) => (
             <option key={c.name} value={c.name}>
@@ -138,8 +136,7 @@ export function FilterPanel({ columns, rows, filters, onAdd, onRemove, onClear }
           <select
             value={op}
             onChange={(e) => setOp(e.target.value as FilterOp)}
-            className="rounded-lg border px-2 py-1 text-xs"
-            style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--text-primary)' }}
+            className="dvs-select h-8 w-auto text-xs"
           >
             {ops.map((o) => (
               <option key={o.op} value={o.op}>
@@ -152,8 +149,7 @@ export function FilterPanel({ columns, rows, filters, onAdd, onRemove, onClear }
             <select
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="min-w-0 flex-1 rounded-lg border px-2 py-1 text-xs"
-              style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--text-primary)' }}
+              className="dvs-select h-8 min-w-0 flex-1 text-xs"
             >
               <option value="">choose…</option>
               {suggestions.map((s) => (
@@ -169,8 +165,7 @@ export function FilterPanel({ columns, rows, filters, onAdd, onRemove, onClear }
               onChange={(e) => setValue(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder="value"
-              className="min-w-0 flex-1 rounded-lg border px-2 py-1 text-xs outline-none"
-              style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--text-primary)' }}
+              className="dvs-input h-8 min-w-0 flex-1 text-xs"
             />
           )}
         </div>
@@ -179,8 +174,7 @@ export function FilterPanel({ columns, rows, filters, onAdd, onRemove, onClear }
           type="button"
           onClick={add}
           disabled={value.trim() === ''}
-          className="rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-opacity disabled:opacity-40"
-          style={{ background: 'var(--accent)' }}
+          className="dvs-btn dvs-btn-primary dvs-btn-sm w-full"
         >
           Add filter
         </button>

@@ -1,0 +1,7 @@
+# DataViz Studio backend (FastAPI + Ollama).
+# Install:  pip install -r requirements.txt
+# Run:      uvicorn server.main:app --reload --port 8000
+fastapi>=0.115
+uvicorn[standard]>=0.30
+ollama>=0.4
+python-dotenv>=1.0

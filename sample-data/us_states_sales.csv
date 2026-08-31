@@ -1,0 +1,21 @@
+state,sales,orders,avg_order_value
+California,284000,3200,88.75
+Texas,198000,2400,82.50
+NY,176500,2010,87.81
+Florida,152300,1890,80.58
+Illinois,98400,1180,83.39
+Pennsylvania,89600,1090,82.20
+Ohio,76300,940,81.17
+Georgia,71200,880,80.91
+North Carolina,68900,850,81.06
+Michigan,64500,810,79.63
+WA,88700,940,94.36
+Arizona,57400,720,79.72
+Massachusetts,72800,760,95.79
+Tennessee,49300,640,77.03
+CO,61200,690,88.70
+Oregon,44800,520,86.15
+Nevada,38900,470,82.77
+Virginia,66400,790,84.05
+New Jersey,79200,880,90.00
+Minnesota,47600,590,80.68

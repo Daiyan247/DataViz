@@ -1,0 +1,22 @@
+[
+  { "country": "China", "continent": "Asia", "population_m": 1412, "gdp_trillion": 17.9, "internet_users_pct": 73 },
+  { "country": "India", "continent": "Asia", "population_m": 1408, "gdp_trillion": 3.4, "internet_users_pct": 47 },
+  { "country": "United States", "continent": "Americas", "population_m": 333, "gdp_trillion": 25.5, "internet_users_pct": 92 },
+  { "country": "Indonesia", "continent": "Asia", "population_m": 276, "gdp_trillion": 1.3, "internet_users_pct": 66 },
+  { "country": "Brazil", "continent": "Americas", "population_m": 215, "gdp_trillion": 1.9, "internet_users_pct": 81 },
+  { "country": "Nigeria", "continent": "Africa", "population_m": 219, "gdp_trillion": 0.48, "internet_users_pct": 55 },
+  { "country": "Russia", "continent": "Europe", "population_m": 144, "gdp_trillion": 2.2, "internet_users_pct": 88 },
+  { "country": "Mexico", "continent": "Americas", "population_m": 128, "gdp_trillion": 1.4, "internet_users_pct": 76 },
+  { "country": "Japan", "continent": "Asia", "population_m": 125, "gdp_trillion": 4.2, "internet_users_pct": 90 },
+  { "country": "Germany", "continent": "Europe", "population_m": 84, "gdp_trillion": 4.1, "internet_users_pct": 93 },
+  { "country": "United Kingdom", "continent": "Europe", "population_m": 67, "gdp_trillion": 3.1, "internet_users_pct": 95 },
+  { "country": "France", "continent": "Europe", "population_m": 68, "gdp_trillion": 2.8, "internet_users_pct": 92 },
+  { "country": "Italy", "continent": "Europe", "population_m": 59, "gdp_trillion": 2.0, "internet_users_pct": 85 },
+  { "country": "South Africa", "continent": "Africa", "population_m": 60, "gdp_trillion": 0.41, "internet_users_pct": 72 },
+  { "country": "South Korea", "continent": "Asia", "population_m": 52, "gdp_trillion": 1.7, "internet_users_pct": 98 },
+  { "country": "Spain", "continent": "Europe", "population_m": 47, "gdp_trillion": 1.4, "internet_users_pct": 94 },
+  { "country": "Argentina", "continent": "Americas", "population_m": 46, "gdp_trillion": 0.63, "internet_users_pct": 87 },
+  { "country": "Canada", "continent": "Americas", "population_m": 39, "gdp_trillion": 2.1, "internet_users_pct": 93 },
+  { "country": "Australia", "continent": "Oceania", "population_m": 26, "gdp_trillion": 1.7, "internet_users_pct": 96 },
+  { "country": "Egypt", "continent": "Africa", "population_m": 111, "gdp_trillion": 0.48, "internet_users_pct": 72 }
+]

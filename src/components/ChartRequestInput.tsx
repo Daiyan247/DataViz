@@ -12,6 +12,7 @@ export interface ChartRequestInputProps {
   onSubmit: () => void
   onAttach: (fileName: string, text: string) => void
   disabled?: boolean
+  busy?: boolean
   placeholder?: string
   attachedFileName?: string | null
 }
@@ -22,6 +23,7 @@ export function ChartRequestInput({
   onSubmit,
   onAttach,
   disabled,
+  busy,
   placeholder,
   attachedFileName,
 }: ChartRequestInputProps) {
@@ -33,16 +35,13 @@ export function ChartRequestInput({
   }
 
   return (
-    <div
-      className="flex items-center gap-2 rounded-2xl border px-3 py-2"
-      style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}
-    >
+    <div className="dvs-card flex items-center gap-2 p-2">
       <button
         type="button"
         title="Attach a CSV or JSON file"
+        aria-label="Attach a CSV or JSON file"
         onClick={() => inputRef.current?.click()}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg transition-colors hover:opacity-70"
-        style={{ background: 'var(--surface-2)' }}
+        className="dvs-btn dvs-btn-ghost dvs-btn-icon text-base"
       >
         📎
       </button>
@@ -58,10 +57,10 @@ export function ChartRequestInput({
         }}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col justify-center">
         {attachedFileName && (
-          <span className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>
-            attached: {attachedFileName}
+          <span className="truncate px-1 text-[11px] leading-tight text-muted-foreground">
+            attached: <span className="font-medium text-foreground">{attachedFileName}</span>
           </span>
         )}
         <input
@@ -71,24 +70,22 @@ export function ChartRequestInput({
           placeholder={placeholder ?? 'e.g. "bar chart of revenue by region"'}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey && !busy) {
               e.preventDefault()
               onSubmit()
             }
           }}
-          className="w-full bg-transparent text-sm outline-none"
-          style={{ color: 'var(--text-primary)' }}
+          className="w-full bg-transparent px-1 py-1 text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
 
       <button
         type="button"
         onClick={onSubmit}
-        disabled={disabled || value.trim().length === 0}
-        className="flex h-9 shrink-0 items-center rounded-full px-4 text-sm font-medium text-white transition-opacity disabled:opacity-40"
-        style={{ background: 'var(--accent)' }}
+        disabled={disabled || busy || value.trim().length === 0}
+        className="dvs-btn dvs-btn-primary dvs-btn-md"
       >
-        Chart it
+        {busy ? 'Charting…' : 'Chart it'}
       </button>
     </div>
   )
