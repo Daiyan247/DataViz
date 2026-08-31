@@ -1,3 +1,7 @@
+import { Lightbulb, Minus, TriangleAlert } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+
 /**
  * Chart advisor (expanded panel) that pops up over the chart when the chosen chart
  * may not suit the data. It explains why — deterministic checks (`warnings`) plus
@@ -5,6 +9,10 @@
  * `onSwitch` swaps to a better chart type. `onMinimize` collapses it (the parent
  * then shows a small pill next to the note).
  * Controlled: the parent decides whether the expanded panel or the pill is shown.
+ *
+ * A shadcn Alert carrying the app's amber warning tokens: shadcn ships default and
+ * destructive only, and this is neither — nothing is broken, the chart just may not
+ * be the best choice.
  */
 
 export interface WarningPopupProps {
@@ -21,58 +29,51 @@ export function WarningPopup({ warnings, recommendation, onSwitch, onMinimize }:
   const hasContent = warnings.length > 0 || Boolean(recommendation)
   if (!hasContent) return null
 
-  const actionStyle = { borderColor: 'var(--primary)', color: 'var(--primary)' }
-
   return (
-    <div
-      className="absolute left-4 right-4 top-4 z-10 rounded-lg border p-3 shadow-lg"
-      style={{ background: 'var(--surface-1)', borderColor: 'var(--warning-border)', color: 'var(--warning)' }}
+    <Alert
+      className="absolute inset-x-4 top-4 z-10 border-warning-border bg-warning-bg text-warning shadow-lg backdrop-blur-sm"
       role="alert"
     >
-      {/* Title row with the minimize control right beside the title. */}
-      <div className="mb-1 flex items-center gap-2">
-        <span aria-hidden className="text-sm leading-5">
-          ⚠️
-        </span>
-        <span className="text-xs font-medium">Chart advice</span>
-        <button
+      <TriangleAlert />
+      <AlertTitle className="flex items-center justify-between gap-2">
+        Chart advice
+        <Button
           type="button"
+          variant="ghost"
+          size="icon-xs"
           onClick={onMinimize}
           aria-label="Minimize chart advice"
           title="Minimize"
-          className="text-base leading-none transition-opacity hover:opacity-60"
-          style={{ color: 'var(--text-secondary)' }}
+          className="-my-1 text-warning"
         >
-          −
-        </button>
-      </div>
-      <div className="text-xs">
+          <Minus />
+        </Button>
+      </AlertTitle>
+      <AlertDescription className="text-warning/90">
         {warnings.length > 0 && (
-          <ul className="space-y-0.5">
+          <ul className="space-y-1">
             {warnings.map((w, i) => (
               <li key={i}>{w}</li>
             ))}
           </ul>
         )}
         {recommendation && (
-          <p className={warnings.length > 0 ? 'mt-2' : ''}>
-            💡 A {recommendation.label.toLowerCase()} may describe it better
-            {recommendation.reason ? ` — ${recommendation.reason}` : '.'}
+          <p className={warnings.length > 0 ? 'mt-2 flex gap-1.5' : 'flex gap-1.5'}>
+            <Lightbulb className="mt-0.5 size-3.5 shrink-0" />
+            <span>
+              A {recommendation.label.toLowerCase()} may describe it better
+              {recommendation.reason ? ` — ${recommendation.reason}` : '.'}
+            </span>
           </p>
         )}
         {onSwitch && recommendation && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={onSwitch}
-              className="rounded-full border px-3 py-0.5 font-medium transition-opacity hover:opacity-70"
-              style={actionStyle}
-            >
+          <div className="mt-2.5">
+            <Button type="button" variant="outline" size="sm" onClick={onSwitch}>
               Switch to {recommendation.label}
-            </button>
+            </Button>
           </div>
         )}
-      </div>
-    </div>
+      </AlertDescription>
+    </Alert>
   )
 }

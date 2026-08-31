@@ -146,11 +146,13 @@ export function AnimationLab() {
 
   if (!open) {
     return (
+      // Bottom-LEFT: at bottom-right this launcher sat on top of the composer's
+      // "Chart it" button, covering the app's primary action (and making it
+      // unclickable). The lower-left corner is the sidebar's empty tail.
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium shadow-lg transition-opacity hover:opacity-80"
-        style={{ background: 'var(--surface-1)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+        className="fixed bottom-4 left-4 z-50 flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 text-xs font-medium text-card-foreground shadow-lg transition-colors hover:bg-muted"
       >
         🧪 Animation Lab
       </button>
@@ -159,7 +161,7 @@ export function AnimationLab() {
 
   return (
     <div
-      className="fixed bottom-4 right-4 z-50 flex max-h-[85vh] w-80 flex-col overflow-hidden rounded-2xl border shadow-2xl"
+      className="fixed bottom-4 left-4 z-50 flex max-h-[85vh] w-80 flex-col overflow-hidden rounded-xl border shadow-2xl"
       style={{ background: 'var(--surface-1)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
     >
       {/* Header + minimize */}

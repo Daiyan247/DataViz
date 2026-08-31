@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { VegaLite, type VisualizationSpec } from 'react-vega'
 import type { Column, Row, VizSpec } from '../lib/types'
 import { vegaConfig } from '../lib/vegaTheme'
+import { chrome } from '../lib/palette'
 import { useIsDark } from './useIsDark'
 
 // three.js + the atlas geometry are heavy and only needed for maps, so load the
@@ -68,9 +69,7 @@ export function ChartView({ data, spec, columns, request }: ChartViewProps) {
     return (
       <Suspense
         fallback={
-          <div className="flex h-full items-center justify-center text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Loading map…
-          </div>
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Loading map…</div>
         }
       >
         <MapView data={data} columns={cols} spec={spec} request={request} />
@@ -80,10 +79,7 @@ export function ChartView({ data, spec, columns, request }: ChartViewProps) {
 
   if (data.length === 0) {
     return (
-      <div
-        className="flex h-full items-center justify-center text-sm"
-        style={{ color: 'var(--text-secondary)' }}
-      >
+      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
         No data to plot for this request.
       </div>
     )
@@ -113,7 +109,9 @@ export function ChartView({ data, spec, columns, request }: ChartViewProps) {
   if (isPoint) {
     mark.filled = true
     mark.opacity = isDot ? 1 : isBubble ? 0.6 : 0.75
-    mark.stroke = dark ? '#1a1a19' : '#fcfcfb'
+    // Stroked with the card surface so overlapping points separate cleanly; read
+    // from the palette rather than hard-coded, so it follows the shadcn tokens.
+    mark.stroke = chrome(dark).surface
     mark.strokeWidth = 0.5
     // Cleveland dot plot: one solid, generously sized dot per category.
     if (isDot) mark.size = 140

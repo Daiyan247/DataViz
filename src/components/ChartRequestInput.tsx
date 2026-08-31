@@ -1,9 +1,16 @@
 import { useRef } from 'react'
+import { Loader2, Paperclip, SendHorizontal } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
 
 /**
  * Chat-style composer: a file-attach (paperclip) button, a text field for the
  * chart request, and a send button. Presentational — the parent owns the value
  * and reacts to submit/attach.
+ *
+ * Built as a shadcn Card holding a borderless Input, so the whole bar reads as one
+ * control rather than a field sitting inside a box.
  */
 
 export interface ChartRequestInputProps {
@@ -35,19 +42,17 @@ export function ChartRequestInput({
   }
 
   return (
-    <div
-      className="flex items-center gap-2 rounded-2xl border px-3 py-2"
-      style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}
-    >
-      <button
+    <Card className="flex-row items-center gap-2 p-2">
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         title="Attach a CSV or JSON file"
+        aria-label="Attach a CSV or JSON file"
         onClick={() => inputRef.current?.click()}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg transition-colors hover:opacity-70"
-        style={{ background: 'var(--surface-2)' }}
       >
-        📎
-      </button>
+        <Paperclip />
+      </Button>
       <input
         ref={inputRef}
         type="file"
@@ -60,13 +65,13 @@ export function ChartRequestInput({
         }}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col justify-center">
         {attachedFileName && (
-          <span className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>
-            attached: {attachedFileName}
+          <span className="truncate px-3 text-[11px] leading-tight text-muted-foreground">
+            attached <span className="font-medium text-foreground">{attachedFileName}</span>
           </span>
         )}
-        <input
+        <Input
           type="text"
           value={value}
           disabled={disabled}
@@ -78,20 +83,19 @@ export function ChartRequestInput({
               onSubmit()
             }
           }}
-          className="w-full bg-transparent text-sm outline-none"
-          style={{ color: 'var(--text-primary)' }}
+          className="border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
         />
       </div>
 
-      <button
+      <Button
         type="button"
+        size="lg"
         onClick={onSubmit}
         disabled={disabled || busy || value.trim().length === 0}
-        className="flex h-9 shrink-0 items-center rounded-full px-4 text-sm font-medium text-white transition-opacity disabled:opacity-40"
-        style={{ background: 'var(--primary)' }}
       >
+        {busy ? <Loader2 className="animate-spin" /> : <SendHorizontal />}
         {busy ? 'Charting…' : 'Chart it'}
-      </button>
-    </div>
+      </Button>
+    </Card>
   )
 }

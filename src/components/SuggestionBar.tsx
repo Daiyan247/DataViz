@@ -1,3 +1,20 @@
+import {
+  Activity,
+  AreaChart,
+  BarChart3,
+  Box,
+  CircleDot,
+  Grid3x3,
+  LayoutGrid,
+  Loader2,
+  Map,
+  MoreHorizontal,
+  PieChart,
+  ScatterChart,
+  SignalHigh,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { ChartKind, Suggestion } from '../lib/suggestCharts'
 
 /**
@@ -9,19 +26,21 @@ import type { ChartKind, Suggestion } from '../lib/suggestCharts'
 
 // Keyed by chart KIND (not the Vega mark) so types that share a mark — e.g. a dot
 // plot and a scatter (both `point`), or a histogram and a bar — get distinct icons.
-const GLYPH: Record<ChartKind, string> = {
-  bar: '▊',
-  dotplot: '⋯',
-  line: '📈',
-  area: '⛰',
-  scatter: '⣿',
-  bubble: '⣿',
-  pie: '◕',
-  histogram: '▥',
-  box: '⊟',
-  strip: '┊',
-  heatmap: '▦',
-  map: '🗺',
+// Lucide glyphs rather than the old emoji/box-drawing mix: they inherit size and
+// colour from the Button and sit on the text baseline, which that set never did.
+const ICON: Record<ChartKind, LucideIcon> = {
+  bar: BarChart3,
+  dotplot: MoreHorizontal,
+  line: Activity,
+  area: AreaChart,
+  scatter: ScatterChart,
+  bubble: CircleDot,
+  pie: PieChart,
+  histogram: SignalHigh,
+  box: Box,
+  strip: Grid3x3,
+  heatmap: LayoutGrid,
+  map: Map,
 }
 
 export interface SuggestionBarProps {
@@ -50,42 +69,33 @@ export function SuggestionBar({ suggestions, onSelect, activeKind, readyKinds, l
   const allReady = suggestions.every((s) => stateOf(s) === 'ready')
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
-      <span className="shrink-0 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+      <span className="shrink-0 text-xs font-medium text-muted-foreground">
         {allReady ? 'Compatible' : 'Loading charts…'}
       </span>
       {suggestions.map((s) => {
         const active = s.kind === activeKind
         const st = stateOf(s)
         const ready = st === 'ready'
-        const anim = st === 'loading' ? ' dvs-chip-loading' : st === 'queued' ? ' dvs-chip-queued' : ''
+        const anim = st === 'loading' ? 'dvs-chip-loading' : st === 'queued' ? 'dvs-chip-queued' : ''
+        const Icon = ICON[s.kind]
         return (
-          <button
+          <Button
             key={s.id}
             type="button"
+            // The type on screen is a solid button, the alternatives are outlines —
+            // shadcn's own way of marking one active choice in a row of peers.
+            variant={active ? 'default' : 'outline'}
+            size="sm"
             title={ready ? s.note : st === 'loading' ? 'Loading…' : 'Queued'}
             aria-current={active ? 'true' : undefined}
             aria-busy={st === 'loading'}
             disabled={!ready}
             onClick={ready ? () => onSelect(s) : undefined}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs whitespace-nowrap${
-              ready ? ' transition-opacity hover:opacity-70' : ' cursor-not-allowed'
-            }${anim}`}
-            style={{
-              borderColor: active || st === 'loading' ? 'var(--primary)' : 'var(--border)',
-              background: active ? 'var(--primary)' : 'var(--surface-2)',
-              color: active ? '#fff' : 'var(--text-primary)',
-              fontWeight: active ? 600 : 400,
-            }}
+            className={anim}
           >
-            <span aria-hidden style={{ color: active ? 'rgba(255,255,255,0.8)' : 'var(--text-secondary)' }}>
-              {st === 'loading' ? (
-                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent align-[-2px]" />
-              ) : (
-                GLYPH[s.kind]
-              )}
-            </span>
+            {st === 'loading' ? <Loader2 className="animate-spin" /> : <Icon />}
             {s.label}
-          </button>
+          </Button>
         )
       })}
     </div>

@@ -35,11 +35,8 @@ export class ChartErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div
-          className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          <p style={{ color: 'var(--text-primary)' }}>This chart couldn’t be drawn.</p>
+        <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">This chart couldn’t be drawn.</p>
           <p className="max-w-sm">
             That chart type didn’t work for this data. Try a different chart type or request —
             everything else still works.

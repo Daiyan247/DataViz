@@ -1,8 +1,14 @@
 import { useRef, useState } from 'react'
+import { Upload } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 /**
  * Empty-state dropzone for CSV/JSON. Presentational: it reads the file's text and
  * hands `(fileName, text)` to the parent, which owns parsing and error handling.
+ *
+ * Deliberately not a shadcn Card: a Card is a filled surface, and this has to read
+ * as an empty target — a dashed outline over the page — so it borrows the Card's
+ * radius and tokens without the fill.
  */
 
 export interface FileDropProps {
@@ -32,16 +38,16 @@ export function FileDrop({ onLoad }: FileDropProps) {
         if (file) void read(file)
       }}
       onClick={() => inputRef.current?.click()}
-      className="flex h-full min-h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 text-center transition-colors"
-      style={{
-        borderColor: hover ? 'var(--primary)' : 'var(--border)',
-        background: hover ? 'var(--surface-2)' : 'transparent',
-      }}
+      className={cn(
+        'flex h-full min-h-64 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed p-10 text-center transition-colors',
+        hover ? 'border-primary bg-muted' : 'border-border hover:bg-muted/50',
+      )}
     >
-      <p className="text-base font-medium">Drop a CSV or JSON file to start</p>
-      <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-        or click to browse — your data never leaves the browser
-      </p>
+      <span className="mb-3 flex size-10 items-center justify-center rounded-lg border bg-card text-muted-foreground shadow-xs">
+        <Upload className="size-4" />
+      </span>
+      <p className="text-sm font-medium">Drop a CSV or JSON file to start</p>
+      <p className="text-sm text-muted-foreground">or click to browse — your data never leaves the browser</p>
       <input
         ref={inputRef}
         type="file"

@@ -26,6 +26,14 @@
 :root {
   color-scheme: light dark;
 
+  /* shadcn's neutral scale. These three live here rather than in the generated
+   * block below because its CLI wrote them over this app's same-named tokens, and
+   * removing those took these with them — leaving light mode with no --border at
+   * all, so every border fell back to currentColor (black). */
+  --border: oklch(0.922 0 0);
+  --muted: oklch(0.97 0 0);
+  --accent: oklch(0.97 0 0);
+
   /* Legacy aliases → shadcn tokens. */
   --page: var(--background);
   --surface-1: var(--card);

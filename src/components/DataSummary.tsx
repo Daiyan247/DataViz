@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge'
 import type { ColumnType, DataSet } from '../lib/types'
 
 /**
@@ -20,25 +21,34 @@ export interface DataSummaryProps {
 
 export function DataSummary({ fileName, dataset, filteredCount }: DataSummaryProps) {
   const total = dataset.rows.length
+  const filtered = filteredCount !== total
   return (
     <div>
-      <div className="mb-2 flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold">Data</h2>
-        <span className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>
+      <div className="mb-1 flex items-baseline justify-between gap-2">
+        <h2 className="text-sm font-medium">Data</h2>
+        <span className="truncate text-xs text-muted-foreground" title={fileName}>
           {fileName}
         </span>
       </div>
-      <p className="mb-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
-        {filteredCount === total
-          ? `${total.toLocaleString()} rows`
-          : `${filteredCount.toLocaleString()} of ${total.toLocaleString()} rows (filtered)`}
-      </p>
-      <ul className="flex flex-col gap-1">
+      {/* A filtered count is a state worth noticing, so it gets a Badge rather than
+          more grey text; the unfiltered count stays quiet. */}
+      <div className="mb-3">
+        {filtered ? (
+          <Badge variant="secondary">
+            {filteredCount.toLocaleString()} of {total.toLocaleString()} rows
+          </Badge>
+        ) : (
+          <span className="text-xs text-muted-foreground">{total.toLocaleString()} rows</span>
+        )}
+      </div>
+      <ul className="flex flex-col gap-0.5">
         {dataset.columns.map((col) => (
-          <li key={col.name} className="flex items-center gap-2 text-xs">
+          <li
+            key={col.name}
+            className="flex items-center gap-2 rounded-md px-1.5 py-1 text-xs transition-colors hover:bg-muted"
+          >
             <span
-              className="flex h-5 w-5 items-center justify-center rounded font-mono"
-              style={{ background: 'var(--surface-2)', color: 'var(--text-secondary)' }}
+              className="flex size-5 shrink-0 items-center justify-center rounded border bg-muted font-mono text-[10px] text-muted-foreground"
               title={col.type}
             >
               {TYPE_BADGE[col.type]}
