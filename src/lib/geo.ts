@@ -438,9 +438,26 @@ export interface RawFeatureCollection {
   features: RawFeature[]
 }
 
+// Decoding a topology into a FeatureCollection is the same work every time for a
+// given mode, so the promise is cached. That makes it safe to WARM the atlas ahead
+// of a map being mounted (see preloadChart in ChartView) — the component's own call
+// then resolves from cache instead of paying for the download and decode twice.
+const featureCollections = new Map<GeoMode, Promise<RawFeatureCollection>>()
+
 /** Full GeoJSON FeatureCollection (complete geometry, holes included) for the
  *  Vega-Lite 2D choropleth. Reuses the same dynamically-imported atlas chunks. */
-export async function loadFeatureCollection(mode: GeoMode): Promise<RawFeatureCollection> {
+export function loadFeatureCollection(mode: GeoMode): Promise<RawFeatureCollection> {
+  const cached = featureCollections.get(mode)
+  if (cached) return cached
+  const pending = buildFeatureCollection(mode).catch((err) => {
+    featureCollections.delete(mode) // a failed load must not be cached forever
+    throw err
+  })
+  featureCollections.set(mode, pending)
+  return pending
+}
+
+async function buildFeatureCollection(mode: GeoMode): Promise<RawFeatureCollection> {
   const topojson = await import('topojson-client')
   if (mode === 'usa') {
     const topo = ((await import('us-atlas/states-10m.json')) as { default: unknown }).default as never

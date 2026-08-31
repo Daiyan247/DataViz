@@ -31,7 +31,7 @@ export function WarningPopup({ warnings, recommendation, onSwitch, onMinimize }:
 
   return (
     <Alert
-      className="absolute inset-x-4 top-4 z-10 border-warning-border bg-warning-bg text-warning shadow-lg backdrop-blur-sm"
+      className="absolute inset-x-4 top-4 z-10 border-warning-border bg-warning-bg text-warning shadow-lg"
       role="alert"
     >
       <TriangleAlert />

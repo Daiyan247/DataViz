@@ -12,12 +12,13 @@ import { requestAnalysis } from './lib/requestAnalysis'
 import { captureChartImage } from './lib/captureChart'
 import { chartDigest, digestHasContent } from './lib/chartDigest'
 import { applyFilters } from './lib/filterRows'
+import { preloadChart } from './lib/preloadChart'
 import { profileColumns } from './lib/profile'
 import { chartWarnings } from './lib/chartWarnings'
 import { analyzeMapCoverage, detectMapScope } from './lib/geo'
 import { chartKind, compatibilityBasis, suggestCharts, suggestForColumns, toSuggestion, type ChartKind, type Suggestion } from './lib/suggestCharts'
 import { loadSpringParams } from './lib/springAnim'
-import type { ColumnProfile, DataSet, Filter, VizSpec } from './lib/types'
+import type { Column, ColumnProfile, DataSet, Filter, Row, VizSpec } from './lib/types'
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
@@ -32,6 +33,33 @@ const LOADING_WORDS = [
   'Composing',
   'Crunching the numbers',
 ]
+
+/**
+ * Every advisory line for a chart, in reading order: the deterministic checks, a
+ * map's data-coverage note, then the backend's fallback note. Shared by the render
+ * memo and by handleSubmit, which needs to know whether the panel will already be
+ * showing something at reveal time.
+ */
+function adviceFor(
+  spec: VizSpec,
+  profiles: ColumnProfile[],
+  phrase: string,
+  columns: Column[],
+  rows: Row[],
+  notice: string | null,
+): string[] {
+  const list = chartWarnings(spec, profiles)
+  // A map's data-coverage note ("Europe isn't in your data") belongs in the same
+  // Chart advice panel — not a separate overlay on the map.
+  if (spec.mark === 'geoshape') {
+    const cov = analyzeMapCoverage(detectMapScope(phrase), columns, rows)
+    if (cov?.message) list.push(cov.message)
+  }
+  // Backend fallback note (e.g. a dot plot with no category -> scatter), last so it
+  // reads after any type/data advice.
+  if (notice) list.push(notice)
+  return list
+}
 
 /** Columns the request names (normalized so "unit price" matches unit_price). */
 function namedProfiles(profiles: ColumnProfile[], phrase: string): ColumnProfile[] {
@@ -175,9 +203,19 @@ export default function App() {
       setSubmittedNote(nextNote)
       setChartNotice(nextNotice ?? null)
       setAdvisorMin(false)
+      // A map is lazy-loaded (three.js + the atlas), so without warming it here the
+      // advice panel would paint at once and the map seconds later. Started now so
+      // it runs THROUGH the reveal animation below rather than adding to it, and
+      // swallowed on failure — MapView still loads on its own if this misses.
+      const rowsNow = applyFilters(dataset.rows, filters)
+      const mapReady = preloadChart(nextSpec, dataset.columns, rowsNow).catch(() => {})
+      // Did the advisor have anything to show at the moment the chart appeared?
+      // Deterministic checks are instant; the AI's opinion is not (see below).
+      const adviceAtReveal = adviceFor(nextSpec, profiles, phrase, dataset.columns, rowsNow, nextNotice ?? null)
       // Fill the bar, hold, fade the loader, reveal the primary chart.
       setProgress(100)
       await wait(400)
+      await mapReady
       clearInterval(wordTimer)
       setFinishing(true)
       await wait(300)
@@ -193,6 +231,12 @@ export default function App() {
       ])
       setAiKinds(kinds && kinds.length > 0 ? { query: phrase, list: kinds } : null)
       setRecommendation(rec)
+      // These two model calls take a long time on a local model — measured at ~139s
+      // for a map on this machine. If the advisor had nothing to say at reveal, an
+      // expanded panel appearing now would drop itself over a chart the user has
+      // been reading for two minutes. So late advice arrives COLLAPSED, as the small
+      // pill beside the note; anything shown expanded appeared with the chart.
+      if (rec && adviceAtReveal.length === 0) setAdvisorMin(true)
     } catch {
       clearInterval(trickle)
       clearInterval(wordTimer)
@@ -214,20 +258,13 @@ export default function App() {
     [dataset, filters],
   )
 
-  const warnings = useMemo(() => {
-    if (!spec) return []
-    const list = chartWarnings(spec, profiles)
-    // A map's data-coverage note ("Europe isn't in your data") is shown in the
-    // same Chart advice panel — not a separate overlay on the map.
-    if (spec.mark === 'geoshape') {
-      const cov = analyzeMapCoverage(detectMapScope(submitted ?? ''), dataset?.columns ?? [], filteredRows)
-      if (cov?.message) list.push(cov.message)
-    }
-    // Backend fallback note (e.g. a dot plot with no category → scatter), shown
-    // last so it reads after any type/data advice.
-    if (chartNotice) list.push(chartNotice)
-    return list
-  }, [spec, profiles, submitted, dataset, filteredRows, chartNotice])
+  const warnings = useMemo(
+    () =>
+      spec
+        ? adviceFor(spec, profiles, submitted ?? '', dataset?.columns ?? [], filteredRows, chartNotice)
+        : [],
+    [spec, profiles, submitted, dataset, filteredRows, chartNotice],
+  )
 
   // The AGGREGATED digest of the shown chart (browser-side — raw rows never leave).
   const chartDigestValue = useMemo(() => (spec ? chartDigest(spec, filteredRows) : null), [spec, filteredRows])
