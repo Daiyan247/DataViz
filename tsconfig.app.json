@@ -19,7 +19,13 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "types": ["node"]
+    "types": ["node"],
+
+    /* shadcn/ui imports its components as "@/components/ui/...". Paths are
+       resolved relative to this file, so no (deprecated) baseUrl is needed. */
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }
