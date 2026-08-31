@@ -162,6 +162,45 @@ body {
   animation: dvs-chip-wait 1.7s ease-in-out infinite;
 }
 
+/*
+ * An always-present scrollbar for the panels that scroll.
+ *
+ * Chrome gives these an OVERLAY scrollbar: it takes no layout space and fades
+ * out when idle, so a panel with more content below looks identical to one
+ * without — there is nothing to tell you to scroll. Declaring ::-webkit-scrollbar
+ * opts back into a classic scrollbar that keeps its gutter and stays visible.
+ */
+/* Chromium: ::-webkit-scrollbar opts out of the overlay scrollbar. It must NOT be
+ * paired with `scrollbar-width`/`scrollbar-color` — since Chrome 121 those
+ * standard properties win and the pseudo-element rules are dropped, putting the
+ * invisible overlay bar right back. Firefox gets them below instead. */
+.dvs-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.dvs-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dvs-scroll::-webkit-scrollbar-thumb {
+  /* Transparent border + content-box clipping = a slim thumb with breathing room,
+     without the track eating into the panel's padding. */
+  background: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+.dvs-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+  background-clip: content-box;
+}
+
+/* Firefox, which has no ::-webkit-scrollbar, uses the standard properties. */
+@supports not selector(::-webkit-scrollbar) {
+  .dvs-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent) transparent;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dvs-progress > span { transition: none; }
   .dvs-fade-in { animation: none; }

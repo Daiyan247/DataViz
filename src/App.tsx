@@ -332,7 +332,7 @@ export default function App() {
         {dataset ? (
           <>
             <aside className="w-64 shrink-0">
-              <Card className="h-full gap-6 overflow-y-auto px-4">
+              <Card className="dvs-scroll h-full gap-6 overflow-y-auto px-4">
                 <DataSummary fileName={fileName ?? ''} dataset={dataset} filteredCount={filteredRows.length} />
                 <FilterPanel
                 columns={dataset.columns}
@@ -358,9 +358,13 @@ export default function App() {
             </aside>
 
             <section className="flex min-w-0 flex-1 flex-col gap-3">
-              {/* The graph fills the space and re-fits; the analysis is a SEPARATE,
-                  bounded panel below it (never covers or clips the graph). */}
-              <Card ref={chartRef} className="relative min-h-0 flex-1 overflow-hidden p-4">
+              {/* Scroll region. The chart is pinned to the FULL height of this box
+                  (h-full + shrink-0), so writing an analysis never shrinks it — the
+                  analysis simply lands below the fold and you scroll to it. The
+                  chip strip and the composer sit outside this box so the primary
+                  action stays reachable without scrolling back up. */}
+              <div className="dvs-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-2">
+              <Card ref={chartRef} className="relative h-full shrink-0 overflow-hidden p-4">
                 {parsing ? (
                   <div
                     className="dvs-loader flex h-full flex-col items-center justify-center gap-3 text-sm text-muted-foreground"
@@ -446,7 +450,10 @@ export default function App() {
               </Card>
 
               {spec && !parsing && (
-                <Card className="dvs-fade-in max-h-[13rem] shrink-0 gap-0 overflow-y-auto px-4 py-3">
+                // No max-height / inner scroll any more: the region above scrolls,
+                // so capping this too would give the analysis its own second
+                // scrollbar nested inside the first.
+                <Card className="dvs-fade-in shrink-0 gap-0 px-4 py-3">
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <h2 className="text-sm font-medium">Analysis</h2>
                     {!analysing && (
@@ -476,6 +483,7 @@ export default function App() {
                   )}
                 </Card>
               )}
+              </div>
 
               {!parsing && (
                 <SuggestionBar
