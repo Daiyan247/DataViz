@@ -202,7 +202,7 @@ export function AnimationLab() {
             onChange={(v) => set(s.key, v)}
           />
         ))}
-        <div className="pt-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>
+        <div className="pt-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--muted)' }}>
           Spring easing (cubic-bezier)
         </div>
         {EASING.map((e, i) => (

@@ -311,23 +311,25 @@ export default function App() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex shrink-0 items-center justify-between border-b border-border bg-card px-5 py-3">
-        <div className="flex items-center gap-2.5">
-          <span
-            aria-hidden
-            className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm text-primary-foreground shadow-sm"
-          >
-            ◧
-          </span>
-          <h1 className="text-sm font-semibold tracking-tight">DataViz Studio</h1>
+      <header
+        className="flex items-center justify-between border-b px-5 py-3"
+        style={{ borderColor: 'var(--border)' }}
+      >
+        <div className="flex items-center gap-2">
+          <h1 className="text-base font-semibold">DataViz Studio</h1>
         </div>
-        <span className="dvs-badge text-muted-foreground">CSV / JSON → charts · fully offline</span>
+        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+          CSV / JSON → charts · fully offline
+        </span>
       </header>
 
       <main className="flex min-h-0 flex-1 gap-4 p-4">
         {dataset ? (
           <>
-            <aside className="dvs-card flex w-64 shrink-0 flex-col gap-6 overflow-y-auto p-4">
+            <aside
+              className="flex w-64 shrink-0 flex-col gap-5 overflow-y-auto rounded-2xl border p-4"
+              style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}
+            >
               <DataSummary fileName={fileName ?? ''} dataset={dataset} filteredCount={filteredRows.length} />
               <FilterPanel
                 columns={dataset.columns}
@@ -354,11 +356,15 @@ export default function App() {
             <section className="flex min-w-0 flex-1 flex-col gap-3">
               {/* The graph fills the space and re-fits; the analysis is a SEPARATE,
                   bounded panel below it (never covers or clips the graph). */}
-              <div ref={chartRef} className="dvs-card relative min-h-0 flex-1 overflow-hidden p-4">
+              <div
+                ref={chartRef}
+                className="relative min-h-0 flex-1 overflow-hidden rounded-2xl border p-4"
+                style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}
+              >
                 {parsing ? (
                   <div
-                    className="dvs-loader flex h-full flex-col items-center justify-center gap-3 text-sm text-muted-foreground"
-                    style={{ opacity: finishing ? 0 : 1 }}
+                    className="dvs-loader flex h-full flex-col items-center justify-center gap-3 text-sm"
+                    style={{ color: 'var(--text-secondary)', opacity: finishing ? 0 : 1 }}
                   >
                     <div
                       className="dvs-progress"
@@ -388,16 +394,25 @@ export default function App() {
                         onMinimize={() => setAdvisorMin(true)}
                       />
                     )}
-                    <div className="mb-3 flex items-center gap-2">
-                      {note && <p className="truncate text-xs text-muted-foreground">{note}</p>}
+                    <div className="mb-2 flex items-center gap-2">
+                      {note && (
+                        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          {note}
+                        </p>
+                      )}
                       {advisorMin && hasAdvice && (
                         <button
                           type="button"
                           onClick={() => setAdvisorMin(false)}
                           aria-label="Show chart advice"
-                          className="dvs-badge border-warning-border bg-warning-bg text-warning transition-opacity hover:opacity-80"
+                          className="flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-opacity hover:opacity-80"
+                          style={{
+                            background: 'var(--surface-1)',
+                            borderColor: 'var(--warning-border)',
+                            color: 'var(--warning)',
+                          }}
                         >
-                          ⚠ Chart advice
+                          ⚠️ Chart advice
                         </button>
                       )}
                     </div>
@@ -412,25 +427,28 @@ export default function App() {
                   </div>
                 ) : chartError ? (
                   <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-sm">
-                    <p className="text-warning">⚠ {chartError}</p>
+                    <p style={{ color: 'var(--warning)' }}>⚠︎ {chartError}</p>
                   </div>
                 ) : (
-                  <div className="flex h-full flex-col items-center justify-center text-center text-sm text-muted-foreground">
-                    <div className="max-w-md space-y-3">
-                      <p className="leading-relaxed">
+                  <div
+                    className="flex h-full flex-col items-center justify-center text-center text-sm"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    <div className="max-w-md space-y-2">
+                      <p>
                         Describe the chart you want below — e.g.{' '}
-                        <span className="font-medium text-foreground">“bar chart of revenue by region”</span>,{' '}
-                        <span className="font-medium text-foreground">“revenue over time as a line”</span>, or{' '}
-                        <span className="font-medium text-foreground">“share of units by category as a pie”</span>.
+                        <span style={{ color: 'var(--text-primary)' }}>“bar chart of revenue by region”</span>,{' '}
+                        <span style={{ color: 'var(--text-primary)' }}>“revenue over time as a line”</span>, or{' '}
+                        <span style={{ color: 'var(--text-primary)' }}>“share of units by category as a pie”</span>.
                       </p>
-                      <p className="text-xs leading-relaxed">
+                      <p className="text-xs">
                         Also try{' '}
-                        <span className="font-medium text-foreground">bubble</span>,{' '}
-                        <span className="font-medium text-foreground">radar</span>,{' '}
-                        <span className="font-medium text-foreground">treemap</span>,{' '}
-                        <span className="font-medium text-foreground">funnel</span>, and{' '}
-                        <span className="font-medium text-foreground">radial/gauge</span> — e.g. “bubble of revenue vs
-                        units sized by profit” or “treemap of revenue by category”.
+                        <span style={{ color: 'var(--text-primary)' }}>bubble</span>,{' '}
+                        <span style={{ color: 'var(--text-primary)' }}>radar</span>,{' '}
+                        <span style={{ color: 'var(--text-primary)' }}>treemap</span>,{' '}
+                        <span style={{ color: 'var(--text-primary)' }}>funnel</span>, and{' '}
+                        <span style={{ color: 'var(--text-primary)' }}>radial/gauge</span> — e.g.{' '}
+                        “bubble of revenue vs units sized by profit” or “treemap of revenue by category”.
                       </p>
                     </div>
                   </div>
@@ -438,29 +456,33 @@ export default function App() {
               </div>
 
               {spec && !parsing && (
-                <div className="dvs-card dvs-fade-in max-h-[13rem] shrink-0 overflow-y-auto px-4 py-3">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <h2 className="dvs-label">Analysis</h2>
+                <div
+                  className="dvs-fade-in max-h-[13rem] shrink-0 overflow-y-auto rounded-2xl border px-4 py-3 text-sm leading-relaxed"
+                  style={{ borderColor: 'var(--border)', background: 'var(--surface-1)', color: 'var(--text-secondary)' }}
+                >
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Analysis</span>
                     {!analysing && (
                       <button
                         type="button"
                         onClick={analyseGraph}
                         disabled={!canAnalyse || Boolean(analysingKey)}
-                        className="dvs-btn dvs-btn-outline dvs-btn-sm"
+                        className="shrink-0 rounded-full border px-3 py-0.5 text-xs font-medium transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
+                        style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}
                       >
                         {conclusion ? '↻ Re-analyse' : '🔍 Analyse this graph'}
                       </button>
                     )}
                   </div>
                   {analysing ? (
-                    <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="inline-flex items-center gap-2 opacity-80">
                       <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                       Analysing the graph…
                     </span>
                   ) : conclusion ? (
-                    <p className="text-sm leading-relaxed text-muted-foreground">{conclusion}</p>
+                    <p>{conclusion}</p>
                   ) : (
-                    <p className="dvs-hint">Click “Analyse this graph” for a detailed, professional conclusion.</p>
+                    <span className="opacity-60">Click “Analyse this graph” for a detailed, professional conclusion.</span>
                   )}
                 </div>
               )}
@@ -490,7 +512,11 @@ export default function App() {
           <div className="flex w-full flex-col items-center justify-center gap-4">
             <div className="w-full max-w-xl">
               <FileDrop onLoad={handleLoad} />
-              {loadError && <p className="mt-3 text-center text-sm text-destructive">{loadError}</p>}
+              {loadError && (
+                <p className="mt-3 text-center text-sm" style={{ color: '#e34948' }}>
+                  {loadError}
+                </p>
+              )}
             </div>
           </div>
         )}

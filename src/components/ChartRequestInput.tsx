@@ -35,13 +35,16 @@ export function ChartRequestInput({
   }
 
   return (
-    <div className="dvs-card flex items-center gap-2 p-2">
+    <div
+      className="flex items-center gap-2 rounded-2xl border px-3 py-2"
+      style={{ borderColor: 'var(--border)', background: 'var(--surface-1)' }}
+    >
       <button
         type="button"
         title="Attach a CSV or JSON file"
-        aria-label="Attach a CSV or JSON file"
         onClick={() => inputRef.current?.click()}
-        className="dvs-btn dvs-btn-ghost dvs-btn-icon text-base"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-lg transition-colors hover:opacity-70"
+        style={{ background: 'var(--surface-2)' }}
       >
         📎
       </button>
@@ -57,10 +60,10 @@ export function ChartRequestInput({
         }}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col justify-center">
+      <div className="flex min-w-0 flex-1 flex-col">
         {attachedFileName && (
-          <span className="truncate px-1 text-[11px] leading-tight text-muted-foreground">
-            attached: <span className="font-medium text-foreground">{attachedFileName}</span>
+          <span className="truncate text-xs" style={{ color: 'var(--text-secondary)' }}>
+            attached: {attachedFileName}
           </span>
         )}
         <input
@@ -75,7 +78,8 @@ export function ChartRequestInput({
               onSubmit()
             }
           }}
-          className="w-full bg-transparent px-1 py-1 text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full bg-transparent text-sm outline-none"
+          style={{ color: 'var(--text-primary)' }}
         />
       </div>
 
@@ -83,7 +87,8 @@ export function ChartRequestInput({
         type="button"
         onClick={onSubmit}
         disabled={disabled || busy || value.trim().length === 0}
-        className="dvs-btn dvs-btn-primary dvs-btn-md"
+        className="flex h-9 shrink-0 items-center rounded-full px-4 text-sm font-medium text-white transition-opacity disabled:opacity-40"
+        style={{ background: 'var(--accent)' }}
       >
         {busy ? 'Charting…' : 'Chart it'}
       </button>

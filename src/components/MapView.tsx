@@ -862,7 +862,7 @@ function MapPanel({
           style={swatchStyle}
         />
       </div>
-      <div className="mb-3 flex items-center justify-between text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+      <div className="mb-3 flex items-center justify-between text-[10px]" style={{ color: 'var(--muted)' }}>
         <span>Low</span>
         <div className="flex gap-1">
           <button
@@ -889,7 +889,7 @@ function MapPanel({
         <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
           Show value by
         </span>
-        <span className="text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+        <span className="text-[10px]" style={{ color: 'var(--muted)' }}>
           + height (always)
         </span>
       </div>

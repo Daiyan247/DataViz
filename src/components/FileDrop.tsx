@@ -32,18 +32,14 @@ export function FileDrop({ onLoad }: FileDropProps) {
         if (file) void read(file)
       }}
       onClick={() => inputRef.current?.click()}
-      className={`flex h-full min-h-64 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-colors ${
-        hover ? 'border-primary bg-muted' : 'border-border bg-card/50 hover:bg-muted/50'
-      }`}
+      className="flex h-full min-h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 text-center transition-colors"
+      style={{
+        borderColor: hover ? 'var(--accent)' : 'var(--border)',
+        background: hover ? 'var(--surface-2)' : 'transparent',
+      }}
     >
-      <span
-        aria-hidden
-        className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-lg shadow-sm"
-      >
-        ⤓
-      </span>
-      <p className="text-sm font-semibold tracking-tight">Drop a CSV or JSON file to start</p>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="text-base font-medium">Drop a CSV or JSON file to start</p>
+      <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
         or click to browse — your data never leaves the browser
       </p>
       <input

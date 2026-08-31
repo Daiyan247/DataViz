@@ -50,7 +50,7 @@ export function SuggestionBar({ suggestions, onSelect, activeKind, readyKinds, l
   const allReady = suggestions.every((s) => stateOf(s) === 'ready')
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
-      <span className="shrink-0 text-xs font-medium text-muted-foreground">
+      <span className="shrink-0 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
         {allReady ? 'Compatible' : 'Loading charts…'}
       </span>
       {suggestions.map((s) => {
@@ -67,13 +67,17 @@ export function SuggestionBar({ suggestions, onSelect, activeKind, readyKinds, l
             aria-busy={st === 'loading'}
             disabled={!ready}
             onClick={ready ? () => onSelect(s) : undefined}
-            className={`dvs-btn dvs-btn-sm gap-1.5 ${
-              active
-                ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
-                : 'border border-border bg-card shadow-sm hover:bg-muted'
-            }${ready ? '' : ' cursor-not-allowed'}${anim}`}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs whitespace-nowrap${
+              ready ? ' transition-opacity hover:opacity-70' : ' cursor-not-allowed'
+            }${anim}`}
+            style={{
+              borderColor: active || st === 'loading' ? 'var(--accent)' : 'var(--border)',
+              background: active ? 'var(--accent)' : 'var(--surface-2)',
+              color: active ? '#fff' : 'var(--text-primary)',
+              fontWeight: active ? 600 : 400,
+            }}
           >
-            <span aria-hidden className={active ? 'opacity-80' : 'text-muted-foreground'}>
+            <span aria-hidden style={{ color: active ? 'rgba(255,255,255,0.8)' : 'var(--text-secondary)' }}>
               {st === 'loading' ? (
                 <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent align-[-2px]" />
               ) : (

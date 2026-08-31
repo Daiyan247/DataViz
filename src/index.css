@@ -1,133 +1,45 @@
 @import 'tailwindcss';
 
 /*
- * Design tokens, shadcn/ui style: a neutral slate scale carrying the interface and
- * ONE saturated hue (blue) reserved for primary actions and selection. Everything
- * structural — page, card, border, muted text — is desaturated, so the only colour
- * that draws the eye is either an action or the data itself.
- *
- * Naming follows shadcn (`--background` / `--foreground`, `--muted` /
- * `--muted-foreground`, `--primary`, `--border`, `--ring`, `--radius`) and the pairs
- * are mapped into Tailwind below, so `bg-card`, `text-muted-foreground` and
- * `border-border` work as utilities.
- *
- * Chart SERIES colours are chosen in JS (src/lib/palette.ts) because Vega renders
- * SVG attributes that don't resolve var(); the chrome there is kept in step with
- * these values by hand.
+ * Palette — from the validated, colorblind-safe dataviz reference palette.
+ * App chrome lives in CSS custom properties so light/dark follow the system.
+ * Chart series colors are picked in JS (see src/lib/palette.ts) because
+ * Recharts renders SVG attributes that do not resolve CSS var() reliably.
  */
 :root {
   color-scheme: light dark;
 
-  --background: hsl(210 40% 98%);
-  --foreground: hsl(222 47% 11%);
-
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(222 47% 11%);
-
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(222 47% 11%);
-
-  /* Muted = a recessed SURFACE; muted-foreground = secondary TEXT. */
-  --muted: hsl(210 40% 96%);
-  --muted-foreground: hsl(215 16% 47%);
-
-  --primary: hsl(221 83% 53%);
-  --primary-foreground: hsl(210 40% 98%);
-
-  --secondary: hsl(210 40% 96%);
-  --secondary-foreground: hsl(222 47% 11%);
-
-  --destructive: hsl(0 72% 51%);
-  --destructive-foreground: hsl(210 40% 98%);
-
-  --warning: hsl(32 81% 29%);
-  --warning-bg: hsl(48 96% 89% / 0.6);
-  --warning-border: hsl(45 93% 47% / 0.45);
-
-  --border: hsl(214 32% 91%);
-  --input: hsl(214 32% 91%);
-  --ring: hsl(221 83% 53%);
-
-  --radius: 0.625rem;
-
-  /* Chart chrome — mirrors CHROME_LIGHT in src/lib/palette.ts. */
-  --grid: hsl(214 32% 91%);
-  --axis: hsl(213 27% 84%);
-
-  /* Legacy aliases: older markup (and MapView) still reads these names. They point
-   * at the tokens above so there is exactly one source of truth for each colour. */
-  --page: var(--background);
-  --surface-1: var(--card);
-  --surface-2: var(--muted);
-  --text-primary: var(--foreground);
-  --text-secondary: var(--muted-foreground);
-  --accent: var(--primary);
+  --page: #f3f3f0;
+  --surface-1: #fcfcfb;
+  --surface-2: #ffffff;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --accent: #2a78d6;
+  --warning: #8a5a00;
+  --warning-bg: rgba(237, 161, 0, 0.12);
+  --warning-border: rgba(237, 161, 0, 0.45);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: hsl(222 47% 7%);
-    --foreground: hsl(210 40% 98%);
-
-    --card: hsl(222 47% 11%);
-    --card-foreground: hsl(210 40% 98%);
-
-    --popover: hsl(222 47% 11%);
-    --popover-foreground: hsl(210 40% 98%);
-
-    --muted: hsl(217 33% 17%);
-    --muted-foreground: hsl(215 20% 65%);
-
-    --primary: hsl(217 91% 60%);
-    --primary-foreground: hsl(222 47% 11%);
-
-    --secondary: hsl(217 33% 17%);
-    --secondary-foreground: hsl(210 40% 98%);
-
-    --destructive: hsl(0 63% 51%);
-    --destructive-foreground: hsl(210 40% 98%);
-
-    --warning: hsl(48 96% 76%);
-    --warning-bg: hsl(38 92% 50% / 0.12);
-    --warning-border: hsl(38 92% 50% / 0.4);
-
-    --border: hsl(217 33% 20%);
-    --input: hsl(217 33% 20%);
-    --ring: hsl(217 91% 60%);
-
-    --grid: hsl(217 33% 20%);
-    --axis: hsl(217 25% 27%);
+    --page: #0d0d0c;
+    --surface-1: #1a1a19;
+    --surface-2: #232321;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --accent: #3987e5;
+    --warning: #e2b04a;
+    --warning-bg: rgba(201, 133, 0, 0.15);
+    --warning-border: rgba(201, 133, 0, 0.45);
   }
-}
-
-/* Expose the tokens to Tailwind so they work as utilities (bg-card, border-border,
- * text-muted-foreground, rounded-lg …). */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-warning: var(--warning);
-  --color-warning-bg: var(--warning-bg);
-  --color-warning-border: var(--warning-border);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
 }
 
 html,
@@ -138,93 +50,10 @@ body,
 
 body {
   margin: 0;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  background: var(--page);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
-/* One focus treatment everywhere: a 2px ring offset from the control, shown only
- * for keyboard users (`:focus-visible`), never on mouse click. */
-@layer base {
-  *:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
-  ::placeholder {
-    color: var(--muted-foreground);
-  }
-  /* Native selects/inputs otherwise keep the OS chrome and break the palette. */
-  select,
-  input,
-  button,
-  textarea {
-    font: inherit;
-  }
-}
-
-/*
- * Component primitives. shadcn keeps these as utility strings on each element; here
- * they're named classes so the same button can't drift between six call sites — the
- * markup stays readable and a variant is changed in exactly one place.
- */
-@layer components {
-  .dvs-card {
-    @apply rounded-xl border border-border bg-card text-card-foreground shadow-sm;
-  }
-
-  .dvs-btn {
-    @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-50;
-  }
-  .dvs-btn-primary {
-    @apply bg-primary text-primary-foreground shadow-sm hover:bg-primary/90;
-  }
-  .dvs-btn-outline {
-    @apply border border-border bg-card shadow-sm hover:bg-muted hover:text-foreground;
-  }
-  .dvs-btn-ghost {
-    @apply hover:bg-muted hover:text-foreground;
-  }
-  /* Sizes (shadcn's h-8 / h-9 rhythm). */
-  .dvs-btn-sm {
-    @apply h-8 px-3 text-xs;
-  }
-  .dvs-btn-md {
-    @apply h-9 px-4;
-  }
-  .dvs-btn-icon {
-    @apply h-9 w-9 p-0;
-  }
-
-  .dvs-input {
-    @apply h-9 w-full rounded-md border border-input bg-card px-3 text-sm shadow-sm transition-colors;
-    @apply placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50;
-  }
-  /* Same box as .dvs-input (@apply only takes utilities, not sibling component
-   * classes, so the shared utilities are repeated) plus a chevron. */
-  .dvs-select {
-    @apply h-9 w-full rounded-md border border-input bg-card px-3 text-sm shadow-sm transition-colors;
-    @apply disabled:cursor-not-allowed disabled:opacity-50;
-    @apply cursor-pointer appearance-none bg-no-repeat pr-8;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m4 6 4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.6rem center;
-    background-size: 1rem;
-  }
-
-  /* Small status/label pill (shadcn Badge). */
-  .dvs-badge {
-    @apply inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs font-medium;
-  }
-
-  /* Section label above a group of controls. */
-  .dvs-label {
-    @apply text-sm font-semibold tracking-tight;
-  }
-  .dvs-hint {
-    @apply text-xs text-muted-foreground;
-  }
 }
 
 /*
@@ -239,13 +68,14 @@ body {
   height: 6px;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
 }
 .dvs-progress > span {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--primary);
+  background: var(--accent);
   transition: width 0.35s ease;
 }
 
@@ -289,29 +119,12 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, transparent 25%, color-mix(in srgb, var(--foreground) 8%, transparent) 50%, transparent 75%);
+  background: linear-gradient(100deg, transparent 25%, rgba(255, 255, 255, 0.45) 50%, transparent 75%);
   animation: dvs-chip-shimmer 1.15s ease-in-out infinite;
   pointer-events: none;
 }
 .dvs-chip-queued {
   animation: dvs-chip-wait 1.7s ease-in-out infinite;
-}
-
-/* Thin, unobtrusive scrollbars so panels don't get a heavy OS gutter. */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 999px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -21,30 +21,34 @@ export function WarningPopup({ warnings, recommendation, onSwitch, onMinimize }:
   const hasContent = warnings.length > 0 || Boolean(recommendation)
   if (!hasContent) return null
 
+  const actionStyle = { borderColor: 'var(--accent)', color: 'var(--accent)' }
+
   return (
     <div
-      className="absolute left-4 right-4 top-4 z-10 rounded-lg border border-warning-border bg-warning-bg p-3 text-warning shadow-lg backdrop-blur-sm"
+      className="absolute left-4 right-4 top-4 z-10 rounded-lg border p-3 shadow-lg"
+      style={{ background: 'var(--surface-1)', borderColor: 'var(--warning-border)', color: 'var(--warning)' }}
       role="alert"
     >
       {/* Title row with the minimize control right beside the title. */}
-      <div className="mb-1.5 flex items-center gap-2">
+      <div className="mb-1 flex items-center gap-2">
         <span aria-hidden className="text-sm leading-5">
-          ⚠
+          ⚠️
         </span>
-        <span className="flex-1 text-xs font-semibold tracking-tight">Chart advice</span>
+        <span className="text-xs font-medium">Chart advice</span>
         <button
           type="button"
           onClick={onMinimize}
           aria-label="Minimize chart advice"
           title="Minimize"
-          className="dvs-btn dvs-btn-ghost h-6 w-6 shrink-0 rounded-sm text-base leading-none"
+          className="text-base leading-none transition-opacity hover:opacity-60"
+          style={{ color: 'var(--text-secondary)' }}
         >
           −
         </button>
       </div>
-      <div className="text-xs leading-relaxed">
+      <div className="text-xs">
         {warnings.length > 0 && (
-          <ul className="space-y-1">
+          <ul className="space-y-0.5">
             {warnings.map((w, i) => (
               <li key={i}>{w}</li>
             ))}
@@ -57,8 +61,13 @@ export function WarningPopup({ warnings, recommendation, onSwitch, onMinimize }:
           </p>
         )}
         {onSwitch && recommendation && (
-          <div className="mt-2.5 flex flex-wrap gap-2">
-            <button type="button" onClick={onSwitch} className="dvs-btn dvs-btn-outline dvs-btn-sm text-foreground">
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onSwitch}
+              className="rounded-full border px-3 py-0.5 font-medium transition-opacity hover:opacity-70"
+              style={actionStyle}
+            >
               Switch to {recommendation.label}
             </button>
           </div>

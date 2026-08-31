@@ -38,19 +38,18 @@ export class RootErrorBoundary extends Component<Props, State> {
           }}
         >
           <p style={{ fontWeight: 600 }}>Something went wrong on the frontend.</p>
-          <p style={{ maxWidth: 480, fontSize: 13, color: 'var(--muted-foreground)' }}>
+          <p style={{ maxWidth: 480, fontSize: 13, color: 'var(--text-secondary)' }}>
             Please reload the page and try again.
           </p>
           <button
             type="button"
             onClick={() => window.location.reload()}
             style={{
-              borderRadius: 'var(--radius)',
+              borderRadius: 999,
               padding: '8px 16px',
               fontSize: 14,
-              fontWeight: 500,
-              color: 'var(--primary-foreground)',
-              background: 'var(--primary)',
+              color: '#fff',
+              background: 'var(--accent)',
               border: 'none',
               cursor: 'pointer',
             }}

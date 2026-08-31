@@ -68,7 +68,7 @@ export function ChartView({ data, spec, columns, request }: ChartViewProps) {
     return (
       <Suspense
         fallback={
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-full items-center justify-center text-sm" style={{ color: 'var(--text-secondary)' }}>
             Loading map…
           </div>
         }
@@ -80,7 +80,10 @@ export function ChartView({ data, spec, columns, request }: ChartViewProps) {
 
   if (data.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+      <div
+        className="flex h-full items-center justify-center text-sm"
+        style={{ color: 'var(--text-secondary)' }}
+      >
         No data to plot for this request.
       </div>
     )
