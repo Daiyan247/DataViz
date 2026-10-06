@@ -51,6 +51,10 @@
   --warning: oklch(0.42 0.09 72);
   --warning-bg: oklch(0.97 0.04 92);
   --warning-border: oklch(0.85 0.11 85);
+
+  /* Completion accent for the analysis pipeline's per-node thumbs up. Green, since
+   * it reads as "this step finished" against the amber that means "read this". */
+  --success: oklch(0.52 0.13 150);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -71,7 +75,10 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  /* Sharper, more modern reading: was 0.625rem (10px). Every rounded-* utility in
+   * the app derives from this one token (see --radius-sm/md/lg/xl/... below), so
+   * lowering it alone sharpens cards, buttons, inputs and menus consistently. */
+  --radius: 0.25rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -119,6 +126,27 @@ body {
 /* The whole loading block fades out once the bar is full. */
 .dvs-loader {
   transition: opacity 0.3s ease;
+}
+
+/*
+ * The chart is the visual focus of the three-column layout, so its frame is
+ * capped at LANDSCAPE-OR-SQUARE — it is never allowed to read as a tall,
+ * narrow slab — but is NOT forced into a literal square. A literal square
+ * badly crops/squeezes a world map (maps read naturally wide, close to 2:1)
+ * even though it suited a small bar chart; capping only the tall side fixes
+ * both: the frame always uses the full available WIDTH, and its height fills
+ * the available height UNLESS that would exceed the width, in which case
+ * height is capped to match it — square is the tall-side limit, not the goal.
+ * Container query units (not JS/a ResizeObserver) compute this from the
+ * wrapper's own box: `.dvs-chart-wrap` becomes a size query container, and
+ * `.dvs-chart-frame`'s height is `min(available height, available width)`.
+ */
+.dvs-chart-wrap {
+  container-type: size;
+}
+.dvs-chart-frame {
+  width: 100cqw;
+  height: min(100cqh, 100cqw);
 }
 
 /* The chart fades/rises in as the loader clears. */
@@ -242,6 +270,7 @@ body {
   --color-warning: var(--warning);
   --color-warning-bg: var(--warning-bg);
   --color-warning-border: var(--warning-border);
+  --color-success: var(--success);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -306,6 +335,7 @@ body {
   --warning: oklch(0.88 0.11 90);
   --warning-bg: oklch(0.26 0.04 78);
   --warning-border: oklch(0.42 0.07 80);
+  --success: oklch(0.76 0.15 152);
 }
 /*
  ---break---

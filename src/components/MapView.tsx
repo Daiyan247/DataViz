@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { ArrowLeftRight, Lock, LockOpen, Map as MapIcon, Minus, Mountain, MoveDiagonal2, Palette } from 'lucide-react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -121,7 +122,19 @@ interface Gradient {
   low: string
   high: string
 }
-const DEFAULT_GRADIENT: Gradient = { low: '#22c55e', high: '#ef4444' } // green low → red high
+// Matches the default aesthetic's (Broadcast) own ramp, not an unrelated pair — a
+// real bug this replaces: the gradient used to default to a hardcoded green→red
+// regardless of which aesthetic was selected, so the "Value gradient" swatches and
+// the actually-rendered colors visibly disagreed with the highlighted Aesthetic
+// swatch. Green→red is also a poor default on its own terms — it's the classic
+// red-green colorblind conflict (~8% of men), and it reads as a diverging
+// good→bad traffic-light signal, which is misleading for an ordinary magnitude
+// measure (population, revenue, ...) that has no "bad" end. A sequential
+// single-hue ramp (light→dark, as every AESTHETICS entry already uses) is the
+// standard convention for this (cf. ColorBrewer's sequential-vs-diverging
+// distinction), and matches this app's own colorblind-safe categorical palette
+// (src/lib/palette.ts) in spirit.
+const DEFAULT_GRADIENT: Gradient = { low: AESTHETICS[0].rampLow, high: AESTHETICS[0].rampHigh }
 
 function desaturateHex(hex: string, amount: number): string {
   const c = new THREE.Color(hex)
@@ -736,14 +749,14 @@ function MapPanel({
         aria-label={zoomLocked ? 'Unlock map zoom' : 'Lock map zoom'}
         aria-pressed={zoomLocked}
         title={zoomLocked ? 'Zoom locked — click to unlock' : 'Zoom unlocked — click to lock'}
-        className="flex h-8 w-8 items-center justify-center rounded-full border text-sm shadow-lg transition-opacity hover:opacity-80"
+        className="flex h-8 w-8 items-center justify-center rounded-sm border shadow-lg transition-opacity hover:opacity-80"
         style={{
           background: 'var(--surface-1)',
           borderColor: zoomLocked ? 'var(--primary)' : 'var(--border)',
           color: zoomLocked ? 'var(--primary)' : 'var(--text-secondary)',
         }}
       >
-        {zoomLocked ? '🔒' : '🔓'}
+        {zoomLocked ? <Lock className="size-4" /> : <LockOpen className="size-4" />}
       </button>
       <button
         type="button"
@@ -751,14 +764,14 @@ function MapPanel({
         aria-label={tiltLocked ? 'Unlock map tilt' : 'Lock map tilt'}
         aria-pressed={tiltLocked}
         title={tiltLocked ? 'Tilt locked — click to unlock' : 'Tilt unlocked — click to lock'}
-        className="flex h-8 w-8 items-center justify-center rounded-full border text-sm shadow-lg transition-opacity hover:opacity-80"
+        className="flex h-8 w-8 items-center justify-center rounded-sm border shadow-lg transition-opacity hover:opacity-80"
         style={{
           background: 'var(--surface-1)',
           borderColor: tiltLocked ? 'var(--primary)' : 'var(--border)',
           color: tiltLocked ? 'var(--primary)' : 'var(--text-secondary)',
         }}
       >
-        {tiltLocked ? '⛰️' : '⤢'}
+        {tiltLocked ? <Mountain className="size-4" /> : <MoveDiagonal2 className="size-4" />}
       </button>
     </div>
   )
@@ -770,10 +783,10 @@ function MapPanel({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-lg transition-opacity hover:opacity-80"
+          className="flex items-center gap-1.5 rounded-sm border px-3 py-1.5 text-xs font-medium shadow-lg transition-opacity hover:opacity-80"
           style={{ background: 'var(--surface-1)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
         >
-          🎨 Map style{activeCount > 1 ? ` · ${activeCount} encodings` : ''}
+          <Palette className="size-3.5" /> Map style{activeCount > 1 ? ` · ${activeCount} encodings` : ''}
         </button>
       </div>
     )
@@ -783,21 +796,21 @@ function MapPanel({
     <div className="absolute bottom-3 right-3 z-20 flex flex-col items-end gap-2">
       {lockBtn}
       <div
-        className="w-64 rounded-xl border p-3 shadow-2xl"
+        className="w-64 rounded-md border p-3 shadow-2xl"
         style={{ background: 'var(--surface-1)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
       >
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-sm">🎨</span>
+        <Palette className="size-3.5" style={{ color: 'var(--text-secondary)' }} />
         <span className="text-xs font-semibold">Map style</span>
         <button
           type="button"
           onClick={() => setOpen(false)}
           aria-label="Minimise"
           title="Minimise"
-          className="ml-auto text-base leading-none transition-opacity hover:opacity-60"
+          className="ml-auto leading-none transition-opacity hover:opacity-60"
           style={{ color: 'var(--text-secondary)' }}
         >
-          −
+          <Minus className="size-3.5" />
         </button>
       </div>
 
@@ -851,7 +864,7 @@ function MapPanel({
           className={swatch}
           style={swatchStyle}
         />
-        <div className="h-3 flex-1 rounded-full" style={{ background: `linear-gradient(90deg, ${gradient.low}, ${gradient.high})` }} />
+        <div className="h-3 flex-1 rounded-sm" style={{ background: `linear-gradient(90deg, ${gradient.low}, ${gradient.high})` }} />
         <input
           type="color"
           value={gradient.high}
@@ -868,10 +881,10 @@ function MapPanel({
           <button
             type="button"
             onClick={() => onGradient({ low: gradient.high, high: gradient.low })}
-            className="rounded px-1.5 py-0.5 hover:opacity-70"
+            className="flex items-center gap-1 rounded-sm px-1.5 py-0.5 hover:opacity-70"
             style={{ color: 'var(--text-secondary)' }}
           >
-            ⇄ swap
+            <ArrowLeftRight className="size-3" /> swap
           </button>
           <button
             type="button"
@@ -903,7 +916,7 @@ function MapPanel({
               title={e.hint}
               aria-pressed={on}
               onClick={() => onToggleEnc(e.id)}
-              className="rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors"
+              className="rounded-sm border px-2 py-0.5 text-[11px] font-medium transition-colors"
               style={{
                 background: on ? 'var(--primary)' : 'var(--surface-2)',
                 borderColor: on ? 'var(--primary)' : 'var(--border)',
@@ -928,7 +941,7 @@ function MapPanel({
 function ClarifyPrompt() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center" style={{ color: 'var(--text-secondary)' }}>
-      <div className="text-3xl">🗺️</div>
+      <MapIcon className="size-8" strokeWidth={1.5} />
       <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
         Map of what, specifically?
       </p>

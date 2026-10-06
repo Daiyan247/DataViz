@@ -13,11 +13,11 @@ describe('chartDigest', () => {
   it('aggregates a measure by a category, sorted desc', () => {
     const spec: VizSpec = { mark: 'bar', encoding: { x: { field: 'region', type: 'nominal' }, y: { field: 'revenue', type: 'quantitative', aggregate: 'sum' } } }
     const d = chartDigest(spec, rows)
-    expect(d.dimension).toEqual({ field: 'region', groupCount: 3 })
+    expect(d.dimension).toEqual({ field: 'region', groupCount: 3, shown: 3 })
     // revenue sums: North 150, South 30, East 20 -> total 200
     expect(d.groups?.[0]).toEqual({ label: 'North', value: 150, share: 0.75 })
     expect(d.groups?.map((g) => g.label)).toEqual(['North', 'South', 'East'])
-    expect(d.measure?.field).toBe('revenue')
+    expect(d.underlyingRecords?.field).toBe('revenue')
     expect(digestHasContent(d)).toBe(true)
   })
 
@@ -73,11 +73,26 @@ describe('chartDigest — per-group vs per-row statistics', () => {
     })
   })
 
-  it('keeps row-level stats separate and labelled, so the two cannot be confused', () => {
+  it('files row-level stats under a NAME that cannot be read as the chart values', () => {
     // The raw rows are 100/50/30/20 -> mean 50, max 100. Neither is a bar on the
-    // chart, which is exactly why this is tagged 'per-row'.
-    expect(d.measure).toMatchObject({ basis: 'per-row', mean: 50, max: 100 })
-    expect(d.groupStats?.mean).not.toBe(d.measure?.mean)
+    // chart. Calling this block `measure` on a grouped chart got a real model run to
+    // report the row-level mean/median as a fact about the regions, so on a grouped
+    // chart it is `underlyingRecords` and carries its own disclaimer.
+    expect(d.measure).toBeUndefined()
+    expect(d.underlyingRecords).toMatchObject({ basis: 'per-row', mean: 50, max: 100 })
+    expect(d.underlyingRecords?.describes).toMatch(/NOT the values drawn/)
+    expect(d.groupStats?.mean).not.toBe(d.underlyingRecords?.mean)
+  })
+
+  it('keeps `measure` for an UNGROUPED chart, where each row really is a mark', () => {
+    const scatter: VizSpec = {
+      mark: 'point',
+      encoding: {
+        x: { field: 'visitors', type: 'quantitative' },
+        y: { field: 'revenue', type: 'quantitative' },
+      },
+    }
+    expect(chartDigest(scatter, rows).underlyingRecords).toBeUndefined()
   })
 
   it('omits shares for a non-additive measure, where a share is meaningless', () => {

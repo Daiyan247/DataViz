@@ -21,6 +21,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 import ollama
@@ -42,6 +43,41 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 # where the instructions and the start of the guide live, so a wide dataset would
 # quietly cost the model the reference it reasons from. Pin a window with headroom.
 GUIDE_NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
+
+# /api/analyse sends only ONE chart section (not the whole guide), so its actual
+# prompt runs smaller than the other endpoints' ~4k-token guide — giving it the same
+# 8192 window over-allocates the KV cache for no benefit. Ollama's own guidance is to
+# size num_ctx to the real prompt, not the max you might ever need (docs.ollama.com/
+# faq): a needlessly large context window costs memory bandwidth on every token
+# regardless of how much of it is used.
+#
+# 6144, not smaller: MEASURED via prompt_eval_count against this app's own worst
+# realistic cases (a 30-point line series, a multi-group box plot, a heatmap grid)
+# — the line case alone runs ~4,573 PROMPT tokens before any output, so a first
+# attempt at 4096 was too tight and silently truncated the model's own JSON mid-
+# string on one run in three. 6144 leaves >1,500 tokens of headroom over that
+# worst case plus the num_predict budget below. Re-measure with the same method
+# (see docs/analysis-repeatability.md) before lowering this further. This is the
+# ADVANCED-mode window (full reference: generic stats, style, statistical
+# conventions).
+ANALYSE_NUM_CTX = int(os.getenv("OLLAMA_ANALYSE_NUM_CTX", "6144"))
+
+# NORMAL mode sends no Generic-stats/Style block and a stripped-down per-chart
+# section (3 bullets, no named conventions) — MEASURED via prompt_eval_count at
+# ~2,394 tokens on this app's own worst case (the same 30-point line series used
+# to calibrate ANALYSE_NUM_CTX above), against advanced mode's ~4,573. 3072 keeps
+# comparable headroom over that plus the num_predict budget below. A smaller
+# window is a real generation-time saving (Ollama FAQ: size num_ctx to the real
+# prompt), on top of normal mode's own shorter num_predict.
+ANALYSE_NUM_CTX_NORMAL = int(os.getenv("OLLAMA_ANALYSE_NUM_CTX_NORMAL", "3072"))
+
+# How long Ollama keeps the model resident after a request (its own duration syntax,
+# e.g. "30m", "1h", or "-1" for indefinitely). Ollama's default is 5 minutes; for an
+# interactive session that calls this backend repeatedly, letting the model unload
+# between charts means paying the full weight-load cost again on the next request.
+# Keeping it warm removes that reload tax entirely. (docs.ollama.com/faq, "How do I
+# keep a model loaded in memory or make it unload immediately?")
+OLLAMA_KEEP_ALIVE = os.getenv("OLLAMA_KEEP_ALIVE", "30m")
 
 MARKS = ["bar", "line", "area", "point", "circle", "tick", "arc", "rect", "boxplot", "geoshape"]
 VEGA_TYPES = ["quantitative", "nominal", "ordinal", "temporal"]
@@ -84,10 +120,24 @@ class RecommendRequest(BaseModel):
     columns: list[Profile]
 
 
-class ConclusionRequest(BaseModel):
+class AnalyseRequest(BaseModel):
     spec: dict  # the finished Vega-Lite spec
     digest: dict  # aggregated values computed in the browser (no raw rows)
+    # The user's ORIGINAL phrase. The chart came from this request, so the chart TYPE
+    # is read back out of it rather than re-inferred from the spec's shape.
+    request: str = ""
+    kind: str | None = None  # the client's resolved ChartKind, used to cross-check
+    columns: list[str] = []  # dataset column names, to find the ones the request named
     image: str | None = None  # optional PNG data URL of the rendered chart, for vision analysis
+    # "normal": short, plain-English, no statistical terms — for a general reader.
+    # "advanced": the full technical read (HHI/effective categories, quartiles and
+    # Tukey fences, r² and correlation strength, CV, skewness, ...) for someone who
+    # wants to see the actual indices behind the claim. Also drives how much of the
+    # guide's reference gets sent (normal skips the "Statistical conventions" and
+    # "Generic stats"/"Style" blocks entirely — smaller prompt, faster besides being
+    # simpler) and how long the answer is allowed to run (normal is capped much
+    # shorter, which is a real generation-time saving, not just a reading-time one).
+    mode: str = "normal"
 
 
 # A Vega-Lite encoding channel and the overall spec, as a JSON schema the model
@@ -131,70 +181,154 @@ CHART_TRADEOFFS = (Path(__file__).parent / "chart_tradeoffs.md").read_text(encod
 CHART_CONCLUSION = (Path(__file__).parent / "chart_conclusion_guide.md").read_text(encoding="utf-8")
 
 
-def _parse_conclusion_md(md: str) -> tuple[str, str, dict[str, str]]:
-    """Split the conclusion guide into (generic-stats block, style block, {chart name:
-    section}). This lets a conclusion request carry ONLY the relevant chart's section
-    instead of the whole ~3k-token guide — much faster on a small local model."""
+def _parse_conclusion_md(md: str) -> tuple[str, str, dict[str, tuple[str, str]]]:
+    """Split the conclusion guide into (generic-stats block, style block, {kind slug:
+    (label, section)}).
+
+    Sections are keyed by the SAME chart-kind vocabulary the client uses ("### bar —
+    Bar chart"), so looking one up is an exact match on the type resolved from the
+    user's request — no re-deriving the chart type from the spec's shape. Carrying
+    only the matched section keeps the prompt small enough for a local model.
+    """
     generic: list[str] = []
     style: list[str] = []
-    charts: dict[str, str] = {}
+    charts: dict[str, tuple[str, str]] = {}
     mode: str | None = None
-    name: str | None = None
+    slug: str | None = None
+    label = ""
     buf: list[str] = []
+
+    def close() -> None:
+        nonlocal slug, buf
+        if slug is not None:
+            charts[slug] = (label, "\n".join(buf).strip())
+            slug, buf = None, []
+
     for line in md.splitlines():
         if line.startswith("## ") or (line.startswith("### ") and mode == "charts"):
-            if name is not None:  # close the open chart section
-                charts[name] = "\n".join(buf).strip()
-                name, buf = None, []
+            close()
         if line.startswith("## Generic stats"):
             mode = "generic"
+        elif line.startswith("## Chart types"):
+            mode = "charts"
         elif line.startswith("## Style"):
             mode = "style"
         elif line.startswith("## "):
-            mode = "charts"  # the "What each chart type shows" container
+            mode = None
         elif line.startswith("### ") and mode == "charts":
-            name, buf = line[4:].strip(), [line]
+            head = line[4:].strip()
+            # "bar — Bar chart" → slug "bar", label "Bar chart".
+            parts = head.split("—", 1)
+            slug = parts[0].strip()
+            label = parts[1].strip() if len(parts) > 1 else slug
+            buf = [head]
         elif mode == "generic":
             generic.append(line)
         elif mode == "style":
             style.append(line)
-        elif mode == "charts" and name is not None:
+        elif mode == "charts" and slug is not None:
             buf.append(line)
-    if name is not None:
-        charts[name] = "\n".join(buf).strip()
+    close()
     return "\n".join(generic).strip(), "\n".join(style).strip(), charts
 
 
 CONCLUSION_GENERIC, CONCLUSION_STYLE, CONCLUSION_SECTIONS = _parse_conclusion_md(CHART_CONCLUSION)
 
+# _detect_mark speaks in marks; the guide and the client speak in chart KINDS.
+_MARK_TO_KIND = {"geoshape": "map", "boxplot": "box"}
 
-def _conclusion_label(spec: dict) -> str:
-    """The chart_conclusion_guide.md section name for this spec's chart type."""
+KIND_LABELS = {slug: label for slug, (label, _text) in CONCLUSION_SECTIONS.items()}
+
+
+def _kind_from_request(request: str, fallback: str | None) -> tuple[str, str]:
+    """Resolve the chart TYPE from the user's own words — the chart was built from
+    this request, so the request is the authority. Falls back to the kind the client
+    derived from the rendered spec (vague requests name no type at all).
+
+    Returns (kind, how) where `how` explains which source won, for the progress UI.
+    """
+    mark = _detect_mark(request)
+    if mark:
+        kind = _MARK_TO_KIND.get(mark, mark)
+        if kind in CONCLUSION_SECTIONS:
+            # The rendered chart wins on a genuine disagreement (the backend may have
+            # fallen back — e.g. a dot plot with no category becomes a scatter), but
+            # say so rather than silently analysing a chart that isn't on screen.
+            if fallback and fallback in CONCLUSION_SECTIONS and fallback != kind:
+                return fallback, f"asked for a {KIND_LABELS.get(kind, kind).lower()}, rendered as"
+            return kind, "from your request"
+    if fallback and fallback in CONCLUSION_SECTIONS:
+        return fallback, "from the rendered chart"
+    return "bar", "defaulted"
+
+
+def _named_column_names(request: str, columns: list[str]) -> list[str]:
+    """Columns the request names, in the order they appear in it (treating
+    'unit price' as unit_price)."""
+    req = _norm(request)
+    hits: list[tuple[int, str]] = []
+    for name in columns:
+        n = _norm(name)
+        if not n:
+            continue
+        i = req.find(n)
+        if i >= 0:
+            hits.append((i, name))
+    hits.sort(key=lambda t: t[0])
+    return [n for _, n in hits]
+
+
+# Column-name unit suffixes the model would otherwise have to notice and keep
+# track of itself — spelled out instead so a number is never quoted bare when
+# the column already states what it's counted in (e.g. a real run reported
+# "26 people" / "245.95 people" for a `population_m` column, dropping the
+# "million" the column name states, understating those values 1,000,000x).
+_UNIT_SUFFIXES: list[tuple[str, str]] = [
+    ("_mn", "millions"),
+    ("_m", "millions"),
+    ("_bn", "billions"),
+    ("_b", "billions"),
+    ("_k", "thousands"),
+    ("_pct", "percent"),
+    ("_percent", "percent"),
+    ("_usd", "US dollars"),
+    ("_gbp", "British pounds"),
+    ("_eur", "euros"),
+]
+
+
+def _unit_hint(field: str) -> str | None:
+    """The unit a column name states about itself, if any, e.g. `population_m`
+    -> "millions". Longer suffixes are checked first so `_mn` isn't missed by `_m`."""
+    low = field.lower()
+    for suffix, unit in _UNIT_SUFFIXES:
+        if low.endswith(suffix):
+            return unit
+    return None
+
+
+def _spec_roles(spec: dict) -> list[str]:
+    """Each encoded column and the role it plays, e.g. "revenue (y, sum)" — so the
+    model knows which named column is the measure and which is the category.
+    When the column name states a unit (e.g. `population_m`), that unit is spelled
+    out too, so it's never silently dropped when the model quotes a value."""
     enc = spec.get("encoding") or {}
-
-    def ch(name: str) -> dict:
-        return enc.get(name) or {}
-
-    mark = spec.get("mark")
-    if mark == "bar":
-        return "Histogram" if ch("x").get("bin") else "Bar chart"
-    if mark in ("point", "circle"):
-        if ch("size").get("field"):
-            return "Bubble chart"
-        x_cat = ch("x").get("type") not in (None, "quantitative")
-        y_cat = ch("y").get("type") not in (None, "quantitative")
-        if (x_cat != y_cat) and (ch("x").get("aggregate") or ch("y").get("aggregate")):
-            return "Dot plot (Cleveland)"
-        return "Scatter plot"
-    return {
-        "tick": "Strip plot",
-        "arc": "Pie chart",
-        "rect": "Heatmap",
-        "boxplot": "Box plot",
-        "geoshape": "Map (choropleth)",
-        "line": "Line chart",
-        "area": "Area chart",
-    }.get(mark or "", "Bar chart")
+    roles: list[str] = []
+    for channel, e in enc.items():
+        if not isinstance(e, dict):
+            continue
+        field = e.get("field")
+        bits = [channel]
+        if e.get("aggregate"):
+            bits.append(str(e["aggregate"]))
+        if e.get("bin"):
+            bits.append("binned")
+        role = f"{field or 'count'} ({', '.join(bits)})"
+        unit = _unit_hint(field) if field else None
+        if unit:
+            role += f" — values are in {unit}, always say so"
+        roles.append(role)
+    return roles
 
 SYSTEM = f"""You translate a natural-language chart request into a Vega-Lite specification.
 
@@ -261,32 +395,61 @@ Rules:
 Return ONLY the JSON object."""
 
 
-CONCLUSION_SCHEMA = {
-    "type": "object",
-    "properties": {"conclusion": {"type": "string"}},
-    "required": ["conclusion"],
-}
+# (No CONCLUSION_SCHEMA: this endpoint streams plain prose, not structured JSON —
+# see _stream_analysis for why.)
 
 # Kept short + static: the per-chart guidance is attached per request as a small
 # chart-specific block (fast). When a chart IMAGE is supplied it's analysed by the
-# vision model too. The output is a full professional PARAGRAPH.
-CONCLUSION_SYSTEM = """You are a professional data analyst writing an ANALYSIS of one chart for a report.
+# vision model too. Two tiers of the same job: ADVANCED writes the full technical
+# read (named indices, so a reader with a stats background can verify the claim
+# against the numbers); NORMAL writes the same underlying claim in plain English,
+# for a reader who has never heard of an interquartile range. Both are streamed as
+# PLAIN PROSE, not JSON — see `_analysis_paragraph` for why.
+CONCLUSION_SYSTEM_ADVANCED = """You are a professional data analyst writing an ANALYSIS of one chart for a report, for a reader who is comfortable with statistics and wants to see the actual reasoning, not just the conclusion.
 
-You are given the chart's Vega-Lite spec, a DIGEST of its aggregated values, a short REFERENCE for this chart type, and (when available) the rendered chart IMAGE — study all of them.
+The chart TYPE has already been resolved from the user's own request, and you are given the REFERENCE for exactly that type, the COLUMNS the user named and the role each plays (x/y/color/size/aggregate), a DIGEST of the chart's values, and (when available) the rendered chart IMAGE.
 
-Write a single cohesive PARAGRAPH (4–6 sentences) that:
-1. Names the signature pattern this chart type reveals (a line = change over time, a bar = comparison/ranking, a scatter = relationship, a pie = composition, a histogram = distribution, a box = spread, a map = geographic variation, etc.) and describes it in THIS data.
-2. Weaves in the GENERIC STATS from the digest — the maximum, minimum, mean and (where given) median, range and spread — with concrete labels and numbers (rounded sensibly, e.g. 68,000 not 67,842.3).
-3. Calls out the SPECIFIC trends/patterns for this chart type (the leader and the gap, the direction and steepness of a trend, the strength of a correlation, outliers, skew, concentration, etc.) and closes with the key takeaway.
+YOUR PRIMARY JOB is the SIGNATURE TREND. The reference names the one pattern this chart type exists to reveal — a line's direction and rate, a bar's ranking and gaps, a scatter's correlation strength, a pie's concentration, a histogram's shape, a box plot's median and spread, a heatmap's hotspots, a map's geographic clustering. Your FIRST SENTENCE must state that pattern as found in THIS data, with its numbers. A paragraph that could have been written about any chart type has failed, however many numbers it quotes.
+
+The digest's `trend` block holds the evidence for that signature pattern — the ordered series, the correlation and r², the bins and skew, the quartiles and Tukey fences, the cells and residuals, the concentration figures. Lead from it. NAME the specific statistical quantity or convention you're using as you use it — HHI/effective categories, IQR/quartiles, r² and correlation strength, coefficient of variation, skewness, Tukey fences, standardized residuals — this is the ADVANCED tier specifically because it surfaces the actual technique, not just its conclusion. Apply the reference's thresholds and named conventions (correlation bands, skew bands, the 1.5×IQR fence, the n≥20 rule) rather than inventing your own adjectives.
+
+Then, in 4–6 sentences total: support the signature trend with the GENERIC STATS (max, min, mean vs median, range), call out what breaks the pattern (outliers, laggards, cells or points against the trend), and close with the takeaway.
 
 EVIDENCE — every analytical claim carries its example in the same sentence. Name the group, quote the number. "A few regions dominate" is incomplete; "the Americas and Asia hold 76% of the total (31.5 and 28.5 trillion)" is the same claim, proven. If a sentence characterises the data (dominant, skewed, concentrated, steep, weak) without naming the groups and numbers behind it, rewrite it with them.
 
-LEVELS — the digest tags each statistic with what it describes. `groupStats` (basis "per-group") describes the bars/regions ON the chart; `measure` (basis "per-row") describes the individual records behind them, whose mean and max may appear nowhere on the chart. When the chart groups, quote `groupStats` — calling a per-row mean "the average per continent" is a factual error. Report `share`/`topShare` as percentages.
+NEVER INVENT A NUMBER, AND NEVER INVENT A UNIT. Every figure must come from the digest, and the digest holds bare numbers — write "577,731", never "577,731 trillion", "$577,731" or "577,731 million". Use a unit only when the column name states one. If the evidence for a claim is not there, drop the claim — a shorter honest paragraph beats a complete-sounding invented one.
+
+Any field named `...Share`, `pctChange`, `cagr`, `evenness` or `hhiNormalized` is a FRACTION — 0.021 means 2.1%, so multiply by 100 before writing a percent sign; writing the bare fraction as "0.021%" is a 100x error and has happened before. When a field is already a VERDICT WORD (`skew`, `steadiness`, `volatility`, `concentration.concentration`, `marginDriven`, `paretoLike`), quote it and move on — do not immediately re-describe the same thing with a different, possibly contradictory adjective in the next clause (a prior run quoted `steadiness: "fluctuating"` correctly, then called the same movement "relatively steady" one clause later, which undoes the correct answer it had just given).
+
+LEVELS — the digest tags each statistic with what it describes. `groupStats` (basis "per-group") describes the bars/regions ON the chart; its `skew` field is already decided ("right"/"left"/"symmetric") from mean vs median — quote it, never compare those two numbers yourself, since that comparison has produced a wrong-direction, overstated skew claim before. `underlyingRecords` describes the individual rows BEHIND them — its mean and max appear nowhere on the chart, so quote it only when explicitly discussing individual records, and say that is what you are doing. `measure` appears only on charts that do not group, where each row is itself a mark. Report `share`/`topShare` as percentages. Use `concentration.concentration` ("low"/"moderate"/"high") as given rather than judging it from the raw `concentration.hhi` yourself — the raw HHI has a floor that makes it misleading for a small number of categories, which is exactly why the verdict is computed from `concentration.effectiveGroups` instead. Claim that a few categories dominate only when `paretoLike` is true. `vsSecond` (leader vs. runner-up) and `vsLaggard` (leader vs. smallest) are DIFFERENT ratios — never quote one while describing the other. On a line/area chart, use `trend.steadiness` ("steady"/"uneven"/"fluctuating") and `trend.volatility` ("stable"/"moderate"/"volatile") exactly as given — an independent check found `monotonicShare` 0.517 called "relatively steady" and `cv` 0.09 called "moderate volatility" when the guide's own bands make both the OPPOSITE reading; these two fields exist so you never have to bin those raw numbers yourself. If `dimension.shown` is less than `dimension.groupCount` the group list is truncated: name leaders from it, never a laggard.
 
 Professional, analytical prose. No preamble ("This chart shows"), no markdown, no bullet lists, no headings — just the paragraph. If the data is genuinely too thin for a real pattern, say so plainly.
 
 LANGUAGE: Write in ENGLISH ONLY. Every word must be English. Never emit Chinese, Japanese, Korean or any other non-Latin script — not for a single word, term or punctuation mark. Column names and labels are copied verbatim from the data.
-Return ONLY the JSON object: {"conclusion": "<the paragraph>"}."""
+Output ONLY the paragraph itself — plain prose, no JSON, no quotes around it, no markdown, nothing before or after it."""
+
+# NORMAL: the SAME underlying claim as advanced, translated — never the name of the
+# statistic, always what it means. This exists because real users found the
+# technical tier genuinely hard to follow ("what's an index?"), not because the
+# underlying evidence changes — a normal-tier reader still deserves a grounded,
+# specific answer, just not one that requires knowing what an interquartile range is.
+CONCLUSION_SYSTEM_NORMAL = """You are explaining one chart to someone with no statistics background — a curious general reader, not a data analyst.
+
+The chart TYPE has already been resolved from their own request, and you are given a short REFERENCE for what this chart type is designed to show, the COLUMNS they named, a DIGEST of the chart's actual values, and (when available) the rendered chart IMAGE.
+
+Write 2–4 short, plain-spoken sentences that:
+1. Say what the chart shows, in everyday words. Describe the finding directly — "South and North are neck-and-neck out in front" — never name the pattern abstractly ("the ranking exhibits...", "the signature trend is...").
+2. Back it up with the real numbers from the digest, but round generously and speak in everyday terms — "about a quarter of the total" rather than "28.8%", "roughly twice as much" rather than "a ratio of 1.98", "spread pretty evenly" rather than "low concentration".
+3. Close with the one-sentence takeaway a reader should walk away with.
+
+BANNED: never use a statistical term or field name, in English or otherwise — no "HHI", "effective categories/groups", "evenness", "concentration index", "vsSecond", "vsLaggard", "monotonic share", "steadiness", "volatility", "coefficient of variation", "CV", "skewness", "quartile", "IQR", "interquartile range", "standard deviation", "r²", "correlation coefficient", "Tukey", "standardized residual", "Pareto", "percentile", "aggregate", "per-group", "per-row", "basis". If you're about to write one of these, or any other technical term, stop and rephrase it in plain language — describe what it MEANS for the data, never its NAME. (This is the one hard rule that separates this tier from the advanced one — the underlying facts are identical, only the words differ.)
+
+NEVER INVENT A NUMBER OR A UNIT. Every figure must come from the digest, and the digest holds bare numbers — no units, no currency, no magnitude words — unless the column name itself states one (temp_c is Celsius; revenue has no stated unit, so it gets none).
+
+No preamble ("This chart shows"), no markdown, no bullet points, no headings — just the plain-spoken paragraph. If the data is genuinely too thin to say anything meaningful, say so simply — "there's not quite enough here to spot a real pattern" — rather than manufacturing one.
+
+LANGUAGE: Write in ENGLISH ONLY. Never emit Chinese, Japanese, Korean or any other non-Latin script.
+Output ONLY the paragraph itself — plain prose, no JSON, no quotes around it, no markdown, nothing before or after it."""
 
 # Bilingual models drift into Chinese on free-form prose, and the default (qwen2.5)
 # is one — so this guard is load-bearing, not belt-and-braces. The other endpoints
@@ -324,10 +487,30 @@ def _is_english(text: str) -> bool:
 # answer ended.
 _ARTIFACT = re.compile(r"\{|\}|<\||</|<[a-z_]*tool|\bHere is the updated\b", re.I)
 _SENTENCE_END = re.compile(r"[.!?][\"')\]]?\s*$")
+
+# Magnitude words attached to a number, e.g. "577,731.34 trillion". The digest carries
+# BARE numbers — no units, no scale — so any such word is invented, and inventing one
+# restates the finding off by a factor of a thousand or a trillion. Instructing the
+# model not to do it does not hold (qwen2.5:7b kept it across a reworded prompt), and
+# because the payload provably has no units this is safe to strip deterministically.
+_INVENTED_SCALE = re.compile(
+    r"(?<=\d)(\s*)(trillion|billion|million|thousand|trillions|billions|millions|thousands)\b",
+    re.I,
+)
+# A currency symbol glued to a number, same reasoning.
+_INVENTED_CURRENCY = re.compile(r"(?<![\w.])[$£€¥](?=\d)")
 # A sentence boundary is terminal punctuation NOT followed by a digit — otherwise the
 # decimal point in "15.6 trillion" reads as the end of a sentence, and these
 # paragraphs are full of decimals.
 _SENTENCE_BOUNDARY = re.compile(r"[.!?](?!\d)[\"')\]]?(?=\s|$)")
+
+
+def _strip_invented_units(text: str) -> str:
+    """Remove scale words and currency symbols the model attached to bare numbers."""
+    text = _INVENTED_SCALE.sub("", text)
+    text = _INVENTED_CURRENCY.sub("", text)
+    # Stripping "577,731 trillion," can leave a doubled space before the comma.
+    return re.sub(r" {2,}", " ", text)
 
 
 def _clean_paragraph(text: str) -> str:
@@ -335,6 +518,7 @@ def _clean_paragraph(text: str) -> str:
     cut = _ARTIFACT.search(text)
     if cut:
         text = text[: cut.start()]
+    text = _strip_invented_units(text)
     text = text.strip()
     # Drop a dangling half-sentence — left either by the trim above or by hitting the
     # token limit mid-thought. If the text contains no complete sentence at all, keep
@@ -385,6 +569,7 @@ def chart_spec(body: ChartSpecRequest) -> dict:
             ],
             format=SPEC_SCHEMA,
             options={"temperature": 0, "num_ctx": GUIDE_NUM_CTX},
+            keep_alive=OLLAMA_KEEP_ALIVE,
         )
         raw = json.loads(resp["message"]["content"])
     except Exception as err:  # Ollama down, model not pulled, or bad JSON.
@@ -425,6 +610,7 @@ def suggest(body: ChartSpecRequest) -> dict:
             ],
             format=SUGGEST_SCHEMA,
             options={"temperature": 0, "num_ctx": GUIDE_NUM_CTX},
+            keep_alive=OLLAMA_KEEP_ALIVE,
         )
         raw = json.loads(resp["message"]["content"])
     except Exception as err:
@@ -471,6 +657,7 @@ def recommend(body: RecommendRequest) -> dict:
             ],
             format=RECOMMEND_SCHEMA,
             options={"temperature": 0, "num_ctx": GUIDE_NUM_CTX},
+            keep_alive=OLLAMA_KEEP_ALIVE,
         )
         raw = json.loads(resp["message"]["content"])
     except Exception as err:
@@ -487,76 +674,328 @@ def recommend(body: RecommendRequest) -> dict:
     return {"suggestion": None, "reason": ""}
 
 
-def _analysis_paragraph(system: str, user: str, image_b64: str | None) -> str:
-    """Run the analysis. If an image + a vision model are available, LOOK at the chart
-    (vision model); otherwise reason from the digest with the text model. Falls back
-    to text if the vision model isn't pulled. Returns the paragraph ('' on failure)."""
+# A chart-specific section, for NORMAL mode: keep only the plain-language bullets
+# ("Uniquely shows", "Signature trend", "Analyse") and drop everything after —
+# the "Statistical conventions" block (every named index/threshold) and, on the
+# bar chart, the field-name-heavy "Two DIFFERENT ratios" bullet. Normal mode's
+# system prompt already bans this vocabulary; not sending it too is both belt-
+# and-braces AND a real prompt-size cut (see ANALYSE_NUM_CTX_NORMAL).
+_ADVANCED_ONLY_MARKERS = ("- **Statistical conventions:**", "- **Two DIFFERENT ratios")
 
-    def run(model: str, user_msg: dict, sys: str) -> str:
-        resp = client.chat(
+
+def _plain_section(section: str) -> str:
+    cut = len(section)
+    for marker in _ADVANCED_ONLY_MARKERS:
+        i = section.find(marker)
+        if i != -1:
+            cut = min(cut, i)
+    return section[:cut].rstrip()
+
+
+# A few short sequences that end generation the instant the model starts past its
+# answer — small models often keep going and improvise the NEXT conversational
+# turn (see _ARTIFACT below) or open a stray brace. Stopping generation there is
+# strictly faster than generating the junk and trimming it afterwards.
+_STOP_SEQUENCES = ["\n\n", "{", "<|", "User:", "Assistant:"]
+
+
+def _stream_analysis(system: str, user: str, image_b64: str | None, mode: str):
+    """Generator over the analysis call: yields `{"delta": text}` as tokens arrive,
+    `{"restart": True}` if a non-English answer triggers a retry (the caller should
+    drop whatever it displayed so far), and finally `{"final": cleaned_text}`
+    ("" on failure).
+
+    Streamed PLAIN PROSE, not the structured-JSON `format=` every other endpoint
+    uses: JSON-schema-constrained decoding doesn't stream a growing string
+    cleanly (the value only becomes valid to display once its closing quote
+    arrives), and prose needs no schema — this endpoint's whole output is one
+    string. Streaming raw deltas is what actually lets the paragraph appear as
+    it's written instead of only once the whole thing is ready, which is the
+    single biggest perceived-speed win available without changing models.
+    """
+    num_predict = 220 if mode == "normal" else 500
+    num_ctx = ANALYSE_NUM_CTX_NORMAL if mode == "normal" else ANALYSE_NUM_CTX
+
+    def run(model: str, user_msg: dict, sys: str):
+        stream = client.chat(
             model=model,
             messages=[{"role": "system", "content": sys}, user_msg],
-            format=CONCLUSION_SCHEMA,
             # temperature 0 (as every other endpoint): this is an analysis of fixed
             # numbers, not creative writing, and sampling is what lets a bilingual
             # model wander out of English mid-paragraph.
-            options={"temperature": 0, "num_predict": 400},  # room for a full paragraph
+            options={
+                "temperature": 0,
+                "num_ctx": num_ctx * 2 if "images" in user_msg else num_ctx,
+                "num_predict": num_predict,
+                "stop": _STOP_SEQUENCES,
+            },
+            keep_alive=OLLAMA_KEEP_ALIVE,
+            stream=True,
         )
-        raw = json.loads(resp["message"]["content"])
-        text = raw.get("conclusion") if isinstance(raw, dict) else None
-        return _clean_paragraph(text) if isinstance(text, str) else ""
+        acc = ""
+        for chunk in stream:
+            piece = chunk.get("message", {}).get("content", "")
+            if piece:
+                acc += piece
+                yield {"delta": piece}
+        yield {"_acc": acc}  # internal only — _run_checked below pulls this out
 
-    def run_checked(model: str, user_msg: dict) -> str:
+    def run_checked(model: str, user_msg: dict):
         """One retry with a hard reminder if the model answered in another script;
         a still-drifted paragraph is dropped rather than shown to the user."""
-        text = run(model, user_msg, system)
+        acc = ""
+        for ev in run(model, user_msg, system):
+            if "_acc" in ev:
+                acc = ev["_acc"]
+            else:
+                yield ev
+        text = _clean_paragraph(acc)
         if text and not _is_english(text):
             logger.warning("Model '%s' answered with non-English text; retrying", model)
-            text = run(model, user_msg, system + _ENGLISH_RETRY)
+            yield {"restart": True}
+            acc = ""
+            for ev in run(model, user_msg, system + _ENGLISH_RETRY):
+                if "_acc" in ev:
+                    acc = ev["_acc"]
+                else:
+                    yield ev
+            text = _clean_paragraph(acc)
         if text and not _is_english(text):
             logger.warning("Model '%s' drifted out of English again; dropping the analysis", model)
-            return ""
-        return text
+            yield {"final": ""}
+            return
+        yield {"final": text}
 
     if image_b64:
         try:
-            return run_checked(VISION_MODEL, {"role": "user", "content": user, "images": [image_b64]})
+            # If the vision model errors (not pulled, etc.), it does so on this
+            # first request before any chunk — and so before any `delta` is
+            # yielded — letting the fallback below run with nothing already shown.
+            yield from run_checked(VISION_MODEL, {"role": "user", "content": user, "images": [image_b64]})
+            return
         except Exception:
             logger.warning("Vision analysis unavailable (is '%s' pulled?); using text model", VISION_MODEL)
-    return run_checked(MODEL, {"role": "user", "content": user})
+    yield from run_checked(MODEL, {"role": "user", "content": user})
+
+
+# The analysis pipeline, as the user sees it. Each node reports when it completes so
+# the wait on a slow local model is legible instead of one long spinner.
+ANALYSIS_NODES = [
+    {"id": "chart-type", "label": "Identify the chart type"},
+    {"id": "reference", "label": "Load the analysis reference"},
+    {"id": "columns", "label": "Resolve the columns in play"},
+    {"id": "evidence", "label": "Gather the chart's evidence"},
+    {"id": "analysis", "label": "Write the analysis"},
+]
+
+
+def _sse(payload: dict) -> str:
+    """One server-sent event. `ensure_ascii` keeps the frame bytes plain ASCII."""
+    return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+
+def _signature_line(section: str, limit: int = 90) -> str:
+    """The chart type's signature-trend sentence, as plain text for the progress UI.
+
+    The guide writes it as "- **Signature trend — lead with this:** the direction and
+    the rate — ...", so the bold markers come off before splitting on the colon, and
+    the tail is trimmed at a word boundary rather than mid-word.
+    """
+    lines = section.splitlines()
+    for i, line in enumerate(lines):
+        if "Signature trend" not in line:
+            continue
+        # The guide hard-wraps its bullets, so take the continuation lines too —
+        # otherwise the phrase ends mid-clause ("...the size of the gaps. Who").
+        parts = [line.strip()]
+        for cont in lines[i + 1 :]:
+            stripped = cont.strip()
+            if not stripped or cont.lstrip().startswith("-") or cont.startswith("#"):
+                break
+            parts.append(stripped)
+        plain = " ".join(parts).replace("*", "").lstrip("- ").strip()
+        _, _, rest = plain.partition(":")
+        rest = rest.strip()
+        if not rest:
+            return ""
+        if len(rest) <= limit:
+            return rest
+        cut = rest[:limit].rsplit(" ", 1)[0].rstrip(",;—- ")
+        return f"{cut}…"
+    return ""
+
+
+def _describe_evidence(digest: dict) -> str:
+    """One line naming what evidence the digest actually carries, for the progress UI."""
+    trend = digest.get("trend") or {}
+    shape = trend.get("shape")
+    described = {
+        "series": "ordered series, direction and turning points",
+        "ranking": "ranking, gaps and concentration",
+        "composition": "slice shares and concentration",
+        "distribution": "bins, skew and modality",
+        "spread": "quartiles, IQR and Tukey outliers",
+        "relationship": "correlation, r² and outliers",
+        "matrix": "cells, margins and residuals",
+    }.get(shape or "")
+    bits = []
+    if described:
+        bits.append(described)
+    rows = digest.get("rows")
+    if isinstance(rows, int):
+        bits.append(f"{rows:,} rows")
+    dim = digest.get("dimension") or {}
+    if dim.get("groupCount"):
+        bits.append(f"{dim['groupCount']} groups")
+    return " · ".join(bits) or "summary statistics"
+
+
+def _trim_digest_for_prompt(digest: dict) -> dict:
+    """Drop fields from the digest that `trend` already carries in full, before it
+    goes into the prompt. This is pure token reduction — nothing here changes what
+    the model can see, only how many times it sees the same number.
+
+    The digest keeps `axes`/`correlation`/`measure` as top-level fields for backward
+    compatibility with anything else that might read a ChartDigest object, but nothing
+    in the app does (verified: not referenced outside chartDigest.ts and its tests) —
+    they were fully superseded by `trend` when the chart-type-aware trend blocks were
+    added. Sending both copies to the model costs real prefill time for zero benefit:
+    a scatter's `axes`+`correlation` restate exactly `trend.x`/`trend.y`/
+    `trend.correlation`; a histogram's `measure` is a strict subset of `trend`'s
+    min/max/mean/median (plus stdDev/quartiles/bins `measure` doesn't have).
+    """
+    trend = digest.get("trend") or {}
+    shape = trend.get("shape")
+    trimmed = dict(digest)
+    if shape == "relationship":
+        trimmed.pop("axes", None)
+        trimmed.pop("correlation", None)
+    elif shape == "distribution":
+        trimmed.pop("measure", None)
+    return trimmed
+
+
+def _analysis_events(body: AnalyseRequest):
+    """Run the analysis as a pipeline of nodes, yielding an SSE frame as each one
+    completes. Nodes 1–3 are deterministic and instant — they assemble exactly what
+    the model is allowed to reason from; node 5 is the (slow) model call."""
+    yield _sse({"type": "init", "nodes": ANALYSIS_NODES})
+
+    try:
+        # 1) CHART TYPE — read back out of the request that produced the chart.
+        yield _sse({"type": "node", "id": "chart-type", "status": "running"})
+        kind, how = _kind_from_request(body.request, body.kind)
+        label = KIND_LABELS.get(kind, kind)
+        yield _sse({"type": "node", "id": "chart-type", "status": "done", "detail": f"{label} ({how})"})
+
+        # 2) REFERENCE — the guide section for exactly that type.
+        yield _sse({"type": "node", "id": "reference", "status": "running"})
+        _label, section = CONCLUSION_SECTIONS.get(kind, ("", ""))
+        signature = _signature_line(section)
+        detail = f"lead with {signature}" if signature else f"{label} notes"
+        yield _sse({"type": "node", "id": "reference", "status": "done", "detail": detail})
+
+        # 3) COLUMNS — the ones the request named, plus the role each plays.
+        yield _sse({"type": "node", "id": "columns", "status": "running"})
+        named = _named_column_names(body.request, body.columns)
+        roles = _spec_roles(body.spec)
+        yield _sse(
+            {
+                "type": "node",
+                "id": "columns",
+                "status": "done",
+                "detail": ", ".join(named) if named else (", ".join(roles) or "none named"),
+            }
+        )
+
+        # 4) EVIDENCE — what the browser-side digest actually supports.
+        yield _sse({"type": "node", "id": "evidence", "status": "running"})
+        yield _sse({"type": "node", "id": "evidence", "status": "done", "detail": _describe_evidence(body.digest)})
+
+        # 5) ANALYSIS — the model call, streamed.
+        mode = body.mode if body.mode in ("normal", "advanced") else "normal"
+        has_image = bool(body.image and "," in body.image)
+        yield _sse(
+            {
+                "type": "node",
+                "id": "analysis",
+                "status": "running",
+                "detail": ("reading the chart image" if has_image else "reasoning from the data")
+                + (" — plain-English" if mode == "normal" else " — advanced"),
+            }
+        )
+        if mode == "advanced":
+            reference = (
+                f"This chart is a {label}. The pattern it uniquely reveals, and how to analyse it:\n"
+                f"{section}\n\n"
+                f"Generic stats you can use:\n{CONCLUSION_GENERIC}\n\n"
+                f"Style:\n{CONCLUSION_STYLE}"
+            )
+        else:
+            # No Generic-stats/Style block, and the per-chart section is stripped
+            # of its technical bullets (see _plain_section) — normal mode's system
+            # prompt bans this vocabulary outright, so sending it would only cost
+            # prompt tokens for guidance the answer isn't allowed to use anyway.
+            reference = (
+                f"This chart is a {label}. The pattern it uniquely reveals, and how to describe it in plain words:\n"
+                f"{_plain_section(section)}"
+            )
+        columns_line = (
+            f"Columns the user named: {', '.join(named)}\n" if named else ""
+        ) + (f"Encoded as: {'; '.join(roles)}\n" if roles else "")
+        # The raw Vega-Lite spec is NOT sent: `label`/`kind` already name the chart
+        # type and `roles` already names every encoded column and its aggregate, so
+        # the spec JSON would only repeat both in a more verbose form. Trimming the
+        # digest removes the other source of duplication (see `_trim_digest_for_prompt`).
+        # Together these are a real, measured cut to the analysis prompt's token count.
+        user = (
+            f"Reference:\n{reference}\n\n"
+            f"The user's request: {body.request or '(not given)'}\n"
+            f"{columns_line}\n"
+            f"Value digest:\n{json.dumps(_trim_digest_for_prompt(body.digest))}"
+        )
+        image_b64 = body.image.split(",", 1)[1] if has_image else None
+        system_prompt = CONCLUSION_SYSTEM_ADVANCED if mode == "advanced" else CONCLUSION_SYSTEM_NORMAL
+
+        final_text = ""
+        for ev in _stream_analysis(system_prompt, user, image_b64, mode):
+            if "delta" in ev:
+                yield _sse({"type": "delta", "text": ev["delta"]})
+            elif "restart" in ev:
+                # A non-English answer triggered a retry — whatever was streamed
+                # so far is being thrown away; tell the client to clear it rather
+                # than appending the retry's text onto the rejected draft.
+                yield _sse({"type": "restart"})
+            elif "final" in ev:
+                final_text = ev["final"]
+
+        if not final_text:
+            yield _sse({"type": "node", "id": "analysis", "status": "error"})
+            yield _sse({"type": "error", "message": "The analysis came back empty. Please try again."})
+            return
+        yield _sse({"type": "node", "id": "analysis", "status": "done", "detail": f"{len(final_text.split())} words"})
+        yield _sse({"type": "result", "conclusion": final_text, "kind": kind, "label": label, "mode": mode})
+    except Exception:
+        logger.exception("Analysis pipeline failed")  # full detail stays server-side
+        yield _sse({"type": "error", "message": "The service is temporarily unavailable. Please try again."})
 
 
 @app.post("/api/analyse")
-def analyse(body: ConclusionRequest) -> dict:
-    """A professional PARAGRAPH analysing the chart's variables (generic stats +
-    the chart-type's specific trends/patterns), from its spec + a digest of AGGREGATED
-    values, and — when supplied — the rendered chart IMAGE (analysed by a vision model,
-    falling back to text). No raw rows are ever sent; only the relevant guide section
-    is attached, keeping it fast."""
-    label = _conclusion_label(body.spec)
-    reference = (
-        f"Generic stats you can use: {CONCLUSION_GENERIC}\n\n"
-        f"This chart is a {label} — what it uniquely shows and what to analyse:\n"
-        f"{CONCLUSION_SECTIONS.get(label, '')}\n\n"
-        f"Style: {CONCLUSION_STYLE}"
+def analyse(body: AnalyseRequest) -> StreamingResponse:
+    """A professional PARAGRAPH analysing the chart, STREAMED as a node pipeline.
+
+    The chart type comes from the user's own request (the chart was built from it),
+    which selects the guide section for that exact type; the columns the request named
+    and the browser-computed digest supply the evidence. Each node emits an SSE frame
+    as it completes so the UI can show progress through a slow local model call. No
+    raw rows are ever sent, and only the matched guide section is attached.
+    """
+    return StreamingResponse(
+        _analysis_events(body),
+        media_type="text/event-stream",
+        # Proxies otherwise buffer the whole stream and the progress arrives at once.
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
-    user = (
-        f"Reference:\n{reference}\n\nChart spec:\n{json.dumps(body.spec)}"
-        f"\n\nValue digest:\n{json.dumps(body.digest)}"
-    )
-    # The browser sends a PNG data URL; the model wants the bare base64.
-    image_b64 = None
-    if body.image and "," in body.image:
-        image_b64 = body.image.split(",", 1)[1]
-    try:
-        text = _analysis_paragraph(CONCLUSION_SYSTEM, user, image_b64)
-    except Exception as err:
-        logger.exception("Analysis request failed")  # full detail stays server-side
-        raise HTTPException(
-            status_code=503,
-            detail="The service is temporarily unavailable. Please try again.",
-        ) from err
-    return {"conclusion": text}
 
 
 # ---- Validation / coercion -------------------------------------------------

@@ -2,15 +2,17 @@ import { useRef } from 'react'
 import { Loader2, Paperclip, SendHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
 
 /**
- * Chat-style composer: a file-attach (paperclip) button, a text field for the
- * chart request, and a send button. Presentational — the parent owns the value
- * and reacts to submit/attach.
+ * Chart-request composer: the text field on its own row (room for the attached-
+ * file label above it), then a row with the file-attach (paperclip) button and
+ * the send button. Presentational — the parent owns the value and reacts to
+ * submit/attach. A plain block, not a Card: it's meant to sit INSIDE the
+ * "Generate" card in App.tsx, not nest a card within a card.
  *
- * Built as a shadcn Card holding a borderless Input, so the whole bar reads as one
- * control rather than a field sitting inside a box.
+ * Stacked rather than a single wide bar because this now lives in the narrow
+ * right-hand rail (generate + analysis), not a full-width bottom bar — a single
+ * row of icon + input + "Chart it" label doesn't fit that width comfortably.
  */
 
 export interface ChartRequestInputProps {
@@ -42,17 +44,26 @@ export function ChartRequestInput({
   }
 
   return (
-    <Card className="flex-row items-center gap-2 p-2">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        title="Attach a CSV or JSON file"
-        aria-label="Attach a CSV or JSON file"
-        onClick={() => inputRef.current?.click()}
-      >
-        <Paperclip />
-      </Button>
+    <div className="flex flex-col gap-2">
+      {attachedFileName && (
+        <span className="truncate px-0.5 text-[11px] leading-tight text-muted-foreground">
+          attached <span className="font-medium text-foreground">{attachedFileName}</span>
+        </span>
+      )}
+      <Input
+        type="text"
+        value={value}
+        disabled={disabled}
+        placeholder={placeholder ?? 'e.g. "bar chart of revenue by region"'}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey && !busy) {
+            e.preventDefault()
+            onSubmit()
+          }
+        }}
+        className="h-14"
+      />
       <input
         ref={inputRef}
         type="file"
@@ -64,38 +75,27 @@ export function ChartRequestInput({
           e.target.value = ''
         }}
       />
-
-      <div className="flex min-w-0 flex-1 flex-col justify-center">
-        {attachedFileName && (
-          <span className="truncate px-3 text-[11px] leading-tight text-muted-foreground">
-            attached <span className="font-medium text-foreground">{attachedFileName}</span>
-          </span>
-        )}
-        <Input
-          type="text"
-          value={value}
-          disabled={disabled}
-          placeholder={placeholder ?? 'e.g. "bar chart of revenue by region"'}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !busy) {
-              e.preventDefault()
-              onSubmit()
-            }
-          }}
-          className="border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
-        />
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          title="Attach a CSV or JSON file"
+          aria-label="Attach a CSV or JSON file"
+          onClick={() => inputRef.current?.click()}
+        >
+          <Paperclip />
+        </Button>
+        <Button
+          type="button"
+          className="flex-1"
+          onClick={onSubmit}
+          disabled={disabled || busy || value.trim().length === 0}
+        >
+          {busy ? <Loader2 className="animate-spin" /> : <SendHorizontal />}
+          {busy ? 'Charting…' : 'Chart it'}
+        </Button>
       </div>
-
-      <Button
-        type="button"
-        size="lg"
-        onClick={onSubmit}
-        disabled={disabled || busy || value.trim().length === 0}
-      >
-        {busy ? <Loader2 className="animate-spin" /> : <SendHorizontal />}
-        {busy ? 'Charting…' : 'Chart it'}
-      </Button>
-    </Card>
+    </div>
   )
 }

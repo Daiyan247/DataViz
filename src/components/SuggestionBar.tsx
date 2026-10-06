@@ -19,9 +19,10 @@ import type { ChartKind, Suggestion } from '../lib/suggestCharts'
 
 /**
  * A strip of chart TYPES compatible with the submitted request + columns, shown
- * alongside the rendered chart. The chart currently on screen (`activeKind`) is
- * highlighted. Clicking a chip swaps to that type instantly — no AI round-trip.
- * Presentational only.
+ * in the right-hand "Generate" panel below the composer. The chart currently on
+ * screen (`activeKind`) is highlighted. Wraps rather than scrolling horizontally,
+ * since it now lives in a narrow rail rather than a full-width bar. Clicking a
+ * chip swaps to that type instantly — no AI round-trip. Presentational only.
  */
 
 // Keyed by chart KIND (not the Vega mark) so types that share a mark — e.g. a dot
@@ -68,7 +69,7 @@ export function SuggestionBar({ suggestions, onSelect, activeKind, readyKinds, l
   }
   const allReady = suggestions.every((s) => stateOf(s) === 'ready')
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+    <div className="flex flex-wrap items-center gap-2">
       <span className="shrink-0 text-xs font-medium text-muted-foreground">
         {allReady ? 'Compatible' : 'Loading charts…'}
       </span>

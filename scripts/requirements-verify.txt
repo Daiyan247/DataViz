@@ -1,0 +1,17 @@
+# QA-only dependencies for scripts/verify_analysis.py's optional RAGAS
+# Faithfulness score. NOT required to run the app itself — keep these out of
+# the top-level requirements.txt, which stays deliberately minimal.
+#
+# Install in this order:
+#   pip install -r scripts/requirements-verify.txt
+#
+# scikit-network is pinned to an old, pure-Python release and installed BEFORE
+# ragas on purpose: a bare `pip install ragas` resolves the newest
+# scikit-network, which ships native extensions and needs a C++ compiler
+# (MSVC Build Tools on Windows) to build from source. Pinning first makes pip
+# see the (unversioned) requirement already satisfied and skip the build
+# entirely — this harness never calls into scikit-network's actual
+# functionality, it's only present to satisfy ragas's import chain.
+scikit-network==0.12.1
+ragas
+openai

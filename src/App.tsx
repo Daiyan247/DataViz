@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChartColumnBig, Loader2, RefreshCw, Search, TriangleAlert } from 'lucide-react'
+import { ChartColumnBig, TriangleAlert } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { parseDataFile } from './lib/parseData'
 import { requestChartSpec } from './lib/requestChartSpec'
 import { requestSuggestedKinds } from './lib/requestSuggestions'
 import { requestRecommendation } from './lib/requestRecommendation'
-import { requestAnalysis } from './lib/requestAnalysis'
+import { applyEvent, streamAnalysis, type AnalysisMode, type AnalysisNode } from './lib/requestAnalysis'
 import { captureChartImage } from './lib/captureChart'
+import { chrome } from './lib/palette'
+import { useIsDark } from './components/useIsDark'
 import { chartDigest, digestHasContent } from './lib/chartDigest'
 import { applyFilters } from './lib/filterRows'
 import { preloadChart } from './lib/preloadChart'
@@ -77,6 +78,16 @@ import { SpringText } from './components/SpringText'
 import { AnimationLab } from './components/AnimationLab'
 import { DataSummary } from './components/DataSummary'
 import { FilterPanel } from './components/FilterPanel'
+import { AnalysisPanel } from './components/AnalysisPanel'
+
+/** One finished analysis, cached for the session. */
+interface AnalysisRun {
+  key: string
+  nodes: AnalysisNode[]
+  running: boolean
+  conclusion: string | null
+  error: string | null
+}
 
 export default function App() {
   const [fileName, setFileName] = useState<string | null>(null)
@@ -103,14 +114,24 @@ export default function App() {
   // A chart-advice line from the backend (e.g. "a dot plot needs a category —
   // showing a scatter instead"). Cleared when the chart type changes.
   const [chartNotice, setChartNotice] = useState<string | null>(null)
-  // The model's analytical CONCLUSION for each chart (from an aggregated digest
-  // computed in the browser), keyed by the chart spec and CACHED for the session so
-  // revisiting a chart is instant. Cleared when the underlying data changes.
-  const [conclusions, setConclusions] = useState<Record<string, string>>({})
-  // The spec currently being analysed (on-demand, via the Analyse button).
-  const [analysingKey, setAnalysingKey] = useState<string | null>(null)
-  // The chart container — captured as an image for the vision analyser.
+  // Finished analyses, CACHED for the session under a key covering both the chart
+  // and the data behind it (see `analysisKey`) — so revisiting a chart/filter
+  // combination is instant and an analysis can never be shown against data it did
+  // not describe.
+  const [analysisCache, setAnalysisCache] = useState<Record<string, AnalysisRun>>({})
+  // The run in progress (or the last one finished), whatever its key.
+  const [analysis, setAnalysis] = useState<AnalysisRun | null>(null)
+  // Cancels an in-flight analysis when the chart or the data changes under it.
+  const analysisAbort = useRef<AbortController | null>(null)
+  // "normal" (plain-English, no jargon) or "advanced" (named indices — HHI,
+  // quartiles, r², ...). Part of the cache key: the two tiers describe the same
+  // chart differently, so switching tiers must never show the other tier's text.
+  const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('normal')
+  // The CHART ONLY — captured as an image for the vision analyser. Deliberately not
+  // the surrounding Card: capture takes the first <svg> it finds, and the advice
+  // panel's warning icon is an <svg> that renders above the chart.
   const chartRef = useRef<HTMLDivElement>(null)
+  const isDark = useIsDark()
   // Staged loading of the compatible strip: the primary chart shows first, then the
   // alternative chips fill in one-by-one (a queue) and only become clickable as each
   // "finishes". Tracked by chart KIND (not index) so the AI re-ranking can reorder
@@ -146,7 +167,8 @@ export default function App() {
       setAiKinds(null)
       setChartError(null)
       setChartNotice(null)
-      setConclusions({})
+      setAnalysisCache({})
+      setAnalysis(null)
       setReadyKinds(new Set())
       setRecommendation(null)
     } catch {
@@ -172,7 +194,6 @@ export default function App() {
     setFinishing(false)
     setChartError(null)
     setChartNotice(null)
-    setConclusions({})
     setReadyKinds(new Set())
     setProgress(8)
     // Rotate the status word — randomly (no immediate repeat), at a calm pace.
@@ -266,23 +287,115 @@ export default function App() {
     [spec, profiles, submitted, dataset, filteredRows, chartNotice],
   )
 
-  // The AGGREGATED digest of the shown chart (browser-side — raw rows never leave).
-  const chartDigestValue = useMemo(() => (spec ? chartDigest(spec, filteredRows) : null), [spec, filteredRows])
-  // Session-cached analyses are keyed by the exact chart spec.
-  const specKey = spec ? JSON.stringify(spec) : null
-  const conclusion = specKey ? conclusions[specKey] ?? null : null
-  const analysing = Boolean(specKey && analysingKey === specKey)
-  const canAnalyse = Boolean(spec && !parsing && chartDigestValue && digestHasContent(chartDigestValue))
+  // The chart type, resolved once and shared: it keys the digest's trend branch, it
+  // highlights the compatible strip, and it is what the analysis forwards to the
+  // backend so the guide section is chosen from the request rather than re-inferred.
+  const activeKind = spec ? chartKind(spec) : undefined
 
-  // ON-DEMAND analysis: capture the rendered chart as an image, send it (plus the
-  // digest) to the vision analyser, and cache the resulting paragraph for the session.
+  // The AGGREGATED digest of the shown chart (browser-side — raw rows never leave).
+  const chartDigestValue = useMemo(
+    () => (spec && activeKind ? chartDigest(spec, filteredRows, activeKind) : null),
+    [spec, filteredRows, activeKind],
+  )
+
+  // An analysis describes a CHART, the data behind it, AND which tier wrote it, so
+  // the cache key covers all three. Keying on the spec alone was why filtering left
+  // a stale paragraph in place: the filters change what the chart shows without
+  // touching the spec. Mode has to be in the key for the same reason — normal and
+  // advanced describe the same chart differently, and switching tiers must show
+  // THAT tier's cached text (or generate it), never the other one's.
+  const analysisKey = spec
+    ? JSON.stringify({ spec, filters, rows: filteredRows.length, mode: analysisMode })
+    : null
+
+  // Anything in flight when the chart or the data changes is describing something
+  // that is no longer on screen — drop it rather than letting it land.
+  useEffect(() => {
+    const inFlight = analysisAbort.current
+    if (!inFlight) return
+    inFlight.abort()
+    analysisAbort.current = null
+    // Settle the abandoned run too: it will never resolve, so leaving it marked as
+    // running would show a permanent spinner if the user navigated back to it.
+    setAnalysis((cur) => (cur?.running ? { ...cur, running: false } : cur))
+  }, [analysisKey])
+
+  const cached = analysisKey ? analysisCache[analysisKey] ?? null : null
+  const live = analysis && analysis.key === analysisKey ? analysis : null
+  const current = live ?? cached
+  // The previous analysis is kept on screen, dimmed, when the data moves under it —
+  // more useful than blanking the panel, as long as it is clearly marked.
+  const previous = !current && analysis?.conclusion ? analysis : null
+  const shown = current ?? previous
+  const analysing = Boolean(live?.running)
+  const stale = Boolean(previous)
+
+  const digestReady = Boolean(chartDigestValue && digestHasContent(chartDigestValue))
+  const canAnalyse = Boolean(spec && !parsing && digestReady) && !analysing
+  const disabledReason = !spec
+    ? 'Create a chart first.'
+    : parsing
+      ? 'Wait for the chart to finish.'
+      : !digestReady
+        ? 'The current filters leave nothing to analyse — clear or loosen them.'
+        : undefined
+
+  // ON-DEMAND analysis: capture the rendered chart as an image, then stream the
+  // backend pipeline, folding each node event into the panel as it lands so the
+  // wait on a local model shows real progress. `delta` events build the paragraph
+  // up live — the whole point of streaming is that it appears as it's written,
+  // not only once the entire thing is ready. Cached under `analysisKey`.
   const analyseGraph = async () => {
-    if (!spec || !specKey || !chartDigestValue || analysingKey) return
-    setAnalysingKey(specKey)
-    const image = await captureChartImage(chartRef.current)
-    const text = await requestAnalysis(spec, chartDigestValue, image)
-    setAnalysingKey((cur) => (cur === specKey ? null : cur))
-    if (text) setConclusions((prev) => ({ ...prev, [specKey]: text }))
+    if (!spec || !analysisKey || !chartDigestValue || !activeKind || analysing) return
+    const controller = new AbortController()
+    analysisAbort.current?.abort()
+    analysisAbort.current = controller
+    const key = analysisKey
+
+    let nodes: AnalysisNode[] = []
+    let liveText = ''
+    setAnalysis({ key, nodes, running: true, conclusion: null, error: null })
+
+    // The chart's real surface, so a dark-mode capture isn't pale text on white.
+    const image = await captureChartImage(chartRef.current, chrome(isDark).surface)
+    if (controller.signal.aborted) return
+
+    const { conclusion, error } = await streamAnalysis(
+      {
+        spec,
+        digest: chartDigestValue,
+        // The phrase the chart was built from — the backend reads the chart TYPE
+        // back out of it instead of guessing from the spec's shape.
+        request: submitted ?? '',
+        kind: activeKind,
+        columns: dataset?.columns.map((c) => c.name) ?? [],
+        image,
+        mode: analysisMode,
+      },
+      (event) => {
+        if (event.type === 'delta') {
+          liveText += event.text
+          setAnalysis((cur) => (cur && cur.key === key ? { ...cur, conclusion: liveText } : cur))
+          return
+        }
+        if (event.type === 'restart') {
+          // A non-English draft is being thrown away — clear it rather than
+          // appending the retry's text onto the rejected one.
+          liveText = ''
+          setAnalysis((cur) => (cur && cur.key === key ? { ...cur, conclusion: null } : cur))
+          return
+        }
+        nodes = applyEvent(nodes, event)
+        const next = nodes
+        setAnalysis((cur) => (cur && cur.key === key ? { ...cur, nodes: next } : cur))
+      },
+      controller.signal,
+    )
+
+    if (controller.signal.aborted) return
+    const finished: AnalysisRun = { key, nodes, running: false, conclusion, error }
+    setAnalysis((cur) => (cur && cur.key === key ? finished : cur))
+    if (conclusion) setAnalysisCache((prev) => ({ ...prev, [key]: finished }))
   }
 
   // Chart types compatible with the columns this chart is ABOUT — each must use ALL
@@ -309,9 +422,6 @@ export default function App() {
     const rest = all.filter((s) => !aiOrder.includes(s.kind))
     return [...picked, ...rest]
   }, [spec, aiKinds, submitted, submittedSpec, submittedNote, profiles])
-
-  // The chart type currently on screen — highlighted in the compatible strip.
-  const activeKind = spec ? chartKind(spec) : undefined
 
   // Compatible-chart QUEUE — the alternatives reveal strictly ONE AT A TIME so the
   // strip fills in a visible queue. `loadingKind` is the chip currently "loading"
@@ -368,40 +478,40 @@ export default function App() {
       <main className="flex min-h-0 flex-1 gap-4 p-4">
         {dataset ? (
           <>
-            <aside className="w-64 shrink-0">
+            <aside className="w-56 shrink-0">
               <Card className="dvs-scroll h-full gap-6 overflow-y-auto px-4">
                 <DataSummary fileName={fileName ?? ''} dataset={dataset} filteredCount={filteredRows.length} />
                 <FilterPanel
                 columns={dataset.columns}
                 rows={dataset.rows}
                 filters={filters}
+                // The analysis cache is keyed by the filters too, so it needs no
+                // clearing here: a filter change simply misses the cache and the
+                // panel offers a re-analysis for the data now on screen.
                 onAdd={(f) => {
                   setFilters((prev) => [...prev, f])
-                  setConclusions({}) // data changed → cached analyses are stale
                   setReadyKinds(new Set())
                 }}
                 onRemove={(id) => {
                   setFilters((prev) => prev.filter((x) => x.id !== id))
-                  setConclusions({})
                   setReadyKinds(new Set())
                 }}
                 onClear={() => {
                   setFilters([])
-                  setConclusions({})
                   setReadyKinds(new Set())
                 }}
                 />
               </Card>
             </aside>
 
-            <section className="flex min-w-0 flex-1 flex-col gap-3">
-              {/* Scroll region. The chart is pinned to the FULL height of this box
-                  (h-full + shrink-0), so writing an analysis never shrinks it — the
-                  analysis simply lands below the fold and you scroll to it. The
-                  chip strip and the composer sit outside this box so the primary
-                  action stays reachable without scrolling back up. */}
-              <div className="dvs-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-2">
-              <Card ref={chartRef} className="relative h-full shrink-0 overflow-hidden p-4">
+            {/* CENTER: the chart alone — the dominant element of the layout. Its
+                frame is capped at landscape-or-square (see .dvs-chart-frame in
+                index.css): never a tall narrow slab, but also never forced into a
+                literal square, which badly crops a world map. Generation and
+                analysis moved to the right rail below so nothing else competes
+                with the chart for space. */}
+            <section className="dvs-chart-wrap flex min-w-0 flex-1 items-center justify-center">
+              <Card className="dvs-chart-frame relative overflow-hidden p-4">
                 {parsing ? (
                   <div
                     className="dvs-loader flex h-full flex-col items-center justify-center gap-3 text-sm text-muted-foreground"
@@ -450,7 +560,10 @@ export default function App() {
                         </Badge>
                       )}
                     </div>
-                    <div className="min-h-0 flex-1">
+                    {/* `chartRef` is on the chart ALONE: the capture for the vision
+                        analyser takes the first <svg> it finds, and the advice
+                        panel's warning icon above is an <svg> too. */}
+                    <div ref={chartRef} className="min-h-0 flex-1">
                       {/* Keying both by the full spec forces a clean Vega remount
                           on ANY spec change (agnostic — not just mark changes), so
                           no marks from a previous chart can linger. */}
@@ -467,7 +580,7 @@ export default function App() {
                   <div className="flex h-full flex-col items-center justify-center text-center text-sm text-muted-foreground">
                     <div className="max-w-md space-y-3">
                       <p>
-                        Describe the chart you want below — e.g.{' '}
+                        Describe the chart you want on the right — e.g.{' '}
                         <span className="font-medium text-foreground">“bar chart of revenue by region”</span>,{' '}
                         <span className="font-medium text-foreground">“revenue over time as a line”</span>, or{' '}
                         <span className="font-medium text-foreground">“share of units by category as a pie”</span>.
@@ -485,63 +598,52 @@ export default function App() {
                   </div>
                 )}
               </Card>
+            </section>
+
+            {/* RIGHT: generation on top, analysis filling the rest of the rail.
+                Moved off the chart's own column so the chart can be the one thing
+                the center holds. */}
+            <aside className="flex w-[300px] shrink-0 flex-col gap-3">
+              <Card className="shrink-0 gap-3 p-3">
+                <ChartRequestInput
+                  value={request}
+                  onChange={setRequest}
+                  onSubmit={handleSubmit}
+                  onAttach={handleLoad}
+                  attachedFileName={fileName}
+                  disabled={!dataset}
+                  busy={parsing}
+                />
+                {!parsing && (
+                  <SuggestionBar
+                    suggestions={suggestions}
+                    onSelect={handleSuggestion}
+                    activeKind={activeKind}
+                    readyKinds={readyKinds}
+                    loadingKind={loadingKind}
+                  />
+                )}
+              </Card>
 
               {spec && !parsing && (
-                // No max-height / inner scroll any more: the region above scrolls,
-                // so capping this too would give the analysis its own second
-                // scrollbar nested inside the first.
-                <Card className="dvs-fade-in shrink-0 gap-0 px-4 py-3">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <h2 className="text-sm font-medium">Analysis</h2>
-                    {!analysing && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={analyseGraph}
-                        disabled={!canAnalyse || Boolean(analysingKey)}
-                      >
-                        {conclusion ? <RefreshCw /> : <Search />}
-                        {conclusion ? 'Re-analyse' : 'Analyse this graph'}
-                      </Button>
-                    )}
+                <Card className="dvs-fade-in min-h-0 flex-1 gap-0 overflow-hidden px-4 py-3">
+                  <div className="dvs-scroll flex h-full flex-col overflow-y-auto">
+                    <AnalysisPanel
+                      nodes={shown?.nodes ?? []}
+                      running={analysing}
+                      conclusion={shown?.conclusion ?? null}
+                      error={live?.error ?? cached?.error ?? null}
+                      stale={stale}
+                      canAnalyse={canAnalyse}
+                      disabledReason={disabledReason}
+                      onAnalyse={analyseGraph}
+                      mode={analysisMode}
+                      onModeChange={setAnalysisMode}
+                    />
                   </div>
-                  {analysing ? (
-                    <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="size-3.5 animate-spin" />
-                      Analysing the graph…
-                    </span>
-                  ) : conclusion ? (
-                    <p className="text-sm leading-relaxed text-muted-foreground">{conclusion}</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Click “Analyse this graph” for a detailed, professional conclusion.
-                    </p>
-                  )}
                 </Card>
               )}
-              </div>
-
-              {!parsing && (
-                <SuggestionBar
-                  suggestions={suggestions}
-                  onSelect={handleSuggestion}
-                  activeKind={activeKind}
-                  readyKinds={readyKinds}
-                  loadingKind={loadingKind}
-                />
-              )}
-
-              <ChartRequestInput
-                value={request}
-                onChange={setRequest}
-                onSubmit={handleSubmit}
-                onAttach={handleLoad}
-                attachedFileName={fileName}
-                disabled={!dataset}
-                busy={parsing}
-              />
-            </section>
+            </aside>
           </>
         ) : (
           <div className="flex w-full flex-col items-center justify-center gap-4">
