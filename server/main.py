@@ -85,6 +85,19 @@ AGGREGATES = ["sum", "mean", "median", "min", "max", "count"]
 
 client = ollama.Client(host=OLLAMA_HOST)
 
+# Groq (hosted, OpenAI-compatible). When a key is set in the `GROQ` env var (or the
+# conventional GROQ_API_KEY) every model call goes to Groq instead of local Ollama —
+# which is what lets this backend run on a host with no GPU. No key -> Ollama, as before.
+GROQ_API_KEY = os.getenv("GROQ") or os.getenv("GROQ_API_KEY")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+groq_client = None
+if GROQ_API_KEY:
+    from groq import Groq
+
+    groq_client = Groq(api_key=GROQ_API_KEY)
+USE_GROQ = groq_client is not None
+
 # Full error detail is logged HERE (server console) only — never returned to the
 # client, so responses can't leak internals (tooling, model, paths, tracebacks).
 logger = logging.getLogger("uvicorn.error")
@@ -530,8 +543,38 @@ def _clean_paragraph(text: str) -> str:
     return text.strip()
 
 
+def _chat_json(system: str, user: str, schema: dict) -> dict:
+    """One structured-JSON model call, on whichever provider is configured."""
+    if USE_GROQ:
+        # Groq's JSON mode guarantees valid JSON but not a schema, so the schema rides
+        # in the prompt. (JSON mode also requires the word "JSON" to appear — it does.)
+        resp = groq_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": system + "\n\nRespond with ONLY a JSON object matching this JSON schema:\n" + json.dumps(schema),
+                },
+                {"role": "user", "content": user},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0,
+        )
+        return json.loads(resp.choices[0].message.content)
+    resp = client.chat(
+        model=MODEL,
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        format=schema,
+        options={"temperature": 0, "num_ctx": GUIDE_NUM_CTX},
+        keep_alive=OLLAMA_KEEP_ALIVE,
+    )
+    return json.loads(resp["message"]["content"])
+
+
 @app.get("/api/health")
 def health() -> dict:
+    if USE_GROQ:
+        return {"ok": True, "model": GROQ_MODEL, "backend": "groq"}
     return {"ok": True, "model": MODEL, "backend": "ollama"}
 
 
@@ -561,17 +604,7 @@ def chart_spec(body: ChartSpecRequest) -> dict:
     user = "Columns:\n" + "\n".join(lines) + f"\n\nRequest: {request}"
 
     try:
-        resp = client.chat(
-            model=MODEL,
-            messages=[
-                {"role": "system", "content": SYSTEM},
-                {"role": "user", "content": user},
-            ],
-            format=SPEC_SCHEMA,
-            options={"temperature": 0, "num_ctx": GUIDE_NUM_CTX},
-            keep_alive=OLLAMA_KEEP_ALIVE,
-        )
-        raw = json.loads(resp["message"]["content"])
+        raw = _chat_json(SYSTEM, user, SPEC_SCHEMA)
     except Exception as err:  # Ollama down, model not pulled, or bad JSON.
         logger.exception("Model request failed")  # full detail stays server-side
         raise HTTPException(
@@ -602,17 +635,7 @@ def suggest(body: ChartSpecRequest) -> dict:
     user = "Columns:\n" + "\n".join(lines) + f"\n\nRequest: {request}"
 
     try:
-        resp = client.chat(
-            model=MODEL,
-            messages=[
-                {"role": "system", "content": SUGGEST_SYSTEM},
-                {"role": "user", "content": user},
-            ],
-            format=SUGGEST_SCHEMA,
-            options={"temperature": 0, "num_ctx": GUIDE_NUM_CTX},
-            keep_alive=OLLAMA_KEEP_ALIVE,
-        )
-        raw = json.loads(resp["message"]["content"])
+        raw = _chat_json(SUGGEST_SYSTEM, user, SUGGEST_SCHEMA)
     except Exception as err:
         logger.exception("Model request failed")  # full detail stays server-side
         raise HTTPException(
@@ -649,17 +672,7 @@ def recommend(body: RecommendRequest) -> dict:
     user = f"Current chart: {chosen}\n\nColumns:\n" + "\n".join(lines)
 
     try:
-        resp = client.chat(
-            model=MODEL,
-            messages=[
-                {"role": "system", "content": RECOMMEND_SYSTEM},
-                {"role": "user", "content": user},
-            ],
-            format=RECOMMEND_SCHEMA,
-            options={"temperature": 0, "num_ctx": GUIDE_NUM_CTX},
-            keep_alive=OLLAMA_KEEP_ALIVE,
-        )
-        raw = json.loads(resp["message"]["content"])
+        raw = _chat_json(RECOMMEND_SYSTEM, user, RECOMMEND_SCHEMA)
     except Exception as err:
         logger.exception("Model request failed")  # full detail stays server-side
         raise HTTPException(
@@ -717,6 +730,32 @@ def _stream_analysis(system: str, user: str, image_b64: str | None, mode: str):
     num_ctx = ANALYSE_NUM_CTX_NORMAL if mode == "normal" else ANALYSE_NUM_CTX
 
     def run(model: str, user_msg: dict, sys: str):
+        if USE_GROQ:
+            msg = user_msg
+            if "images" in user_msg:
+                msg = {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": user_msg["content"]},
+                        {"type": "image_url", "image_url": {"url": "data:image/png;base64," + user_msg["images"][0]}},
+                    ],
+                }
+            groq_stream = groq_client.chat.completions.create(
+                model=model,
+                messages=[{"role": "system", "content": sys}, msg],
+                temperature=0,
+                max_tokens=num_predict,
+                stop=_STOP_SEQUENCES[:4],  # Groq accepts at most 4 stop sequences
+                stream=True,
+            )
+            acc = ""
+            for chunk in groq_stream:
+                piece = chunk.choices[0].delta.content if chunk.choices else None
+                if piece:
+                    acc += piece
+                    yield {"delta": piece}
+            yield {"_acc": acc}
+            return
         stream = client.chat(
             model=model,
             messages=[{"role": "system", "content": sys}, user_msg],
@@ -771,11 +810,12 @@ def _stream_analysis(system: str, user: str, image_b64: str | None, mode: str):
             # If the vision model errors (not pulled, etc.), it does so on this
             # first request before any chunk — and so before any `delta` is
             # yielded — letting the fallback below run with nothing already shown.
-            yield from run_checked(VISION_MODEL, {"role": "user", "content": user, "images": [image_b64]})
+            vision = GROQ_VISION_MODEL if USE_GROQ else VISION_MODEL
+            yield from run_checked(vision, {"role": "user", "content": user, "images": [image_b64]})
             return
         except Exception:
             logger.warning("Vision analysis unavailable (is '%s' pulled?); using text model", VISION_MODEL)
-    yield from run_checked(MODEL, {"role": "user", "content": user})
+    yield from run_checked(GROQ_MODEL if USE_GROQ else MODEL, {"role": "user", "content": user})
 
 
 # The analysis pipeline, as the user sees it. Each node reports when it completes so
