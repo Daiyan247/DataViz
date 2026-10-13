@@ -85,18 +85,22 @@ AGGREGATES = ["sum", "mean", "median", "min", "max", "count"]
 
 client = ollama.Client(host=OLLAMA_HOST)
 
-# Groq (hosted, OpenAI-compatible). When a key is set in the `GROQ` env var (or the
-# conventional GROQ_API_KEY) every model call goes to Groq instead of local Ollama —
-# which is what lets this backend run on a host with no GPU. No key -> Ollama, as before.
+# Groq (hosted, OpenAI-compatible) vs local Ollama. LLM_PROVIDER picks explicitly
+# ("groq" | "ollama"); left on "auto" it follows WHERE the backend runs: on a host
+# (Vercel/Render/Railway/Fly — they set these env vars) it uses Groq, because there is
+# no Ollama there; on your own machine it uses local Ollama, even if a Groq key is
+# present in .env. The key lives in the `GROQ` env var (or GROQ_API_KEY).
 GROQ_API_KEY = os.getenv("GROQ") or os.getenv("GROQ_API_KEY")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
+_HOSTED = any(os.getenv(v) for v in ("VERCEL", "RENDER", "RAILWAY_ENVIRONMENT", "FLY_APP_NAME"))
+_PROVIDER = os.getenv("LLM_PROVIDER", "auto").strip().lower()
+USE_GROQ = bool(GROQ_API_KEY) and (_PROVIDER == "groq" or (_PROVIDER == "auto" and _HOSTED))
 groq_client = None
-if GROQ_API_KEY:
+if USE_GROQ:
     from groq import Groq
 
     groq_client = Groq(api_key=GROQ_API_KEY)
-USE_GROQ = groq_client is not None
 
 # Full error detail is logged HERE (server console) only — never returned to the
 # client, so responses can't leak internals (tooling, model, paths, tracebacks).
